@@ -1,5 +1,5 @@
 # Student-Performance-Predictor
-Team:Orbit
+#Team:Orbit
 Teammates:M Tanusree Reddy,Nihal DR,P Devesh Reddy,Rachana Naidu
 
 ![Student Performance Predictor](https://img.shields.io/badge/Status-Active-brightgreen)
