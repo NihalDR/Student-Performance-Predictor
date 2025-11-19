@@ -625,6 +625,9 @@
             assignments: parseFloat(document.getElementById('assignments').value),
             activities: parseFloat(document.getElementById('activities').value)
         };
+        
+        // Debug log
+        console.log('Sending data to backend:', data);
 
         try {
             const response = await fetch('http://127.0.0.1:5000/predict', {
