@@ -7,8 +7,9 @@ import pickle
 import os
 
 
-def train_and_save_model(output_path: str = 'model.pkl'):
+def train_and_save_model(output_path: str = 'model.pkl', data_path: str = 'training_data.csv'):
     """Train a RandomForest model on synthetic data and save it to `output_path`.
+    Also saves the synthetic data to `data_path` as CSV.
 
     Returns the trained model object.
     """
@@ -24,6 +25,14 @@ def train_and_save_model(output_path: str = 'model.pkl'):
     }
 
     df = pd.DataFrame(data)
+    
+    # Save synthetic data to CSV
+    data_dir = os.path.dirname(os.path.abspath(data_path))
+    if data_dir and not os.path.exists(data_dir):
+        os.makedirs(data_dir, exist_ok=True)
+    
+    df.to_csv(data_path, index=False)
+    print(f"Synthetic data saved as '{data_path}'")
 
     def determine_pass_fail(row):
         score = (row['attendance'] * 0.3) + (row['internal_marks'] * 0.5) + (row['study_hours'] * 2)
@@ -58,4 +67,4 @@ def train_and_save_model(output_path: str = 'model.pkl'):
 
 
 if __name__ == '__main__':
-    train_and_save_model('model.pkl')
+    train_and_save_model('model.pkl', 'training_data.csv')
