@@ -5,63 +5,381 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Performance Predictor</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; padding: 20px; }
-        .container { max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-top: 10px; }
-        button:hover { background-color: #218838; }
-        #result { margin-top: 20px; padding: 15px; border-radius: 5px; text-align: center; display: none; }
-        .pass { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .fail { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #e8eef8 0%, #f5f1ff 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            color: #5b5dff;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #999;
+            margin-bottom: 30px;
+        }
+
+        .try-btn {
+            background: linear-gradient(135deg, #5b5dff 0%, #5b5dff 100%);
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .try-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(91, 93, 255, 0.3);
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .form-section, .result-section {
+            background: white;
+            border-radius: 15px;
+            padding: 35px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+        }
+
+        .form-section h2 {
+            font-size: 24px;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .form-desc {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 25px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input::placeholder,
+        .form-group select::placeholder {
+            color: #ccc;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #5b5dff;
+            box-shadow: 0 0 0 3px rgba(91, 93, 255, 0.1);
+        }
+
+        .form-actions {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 15px;
+            margin-top: 25px;
+            align-items: center;
+        }
+
+        .predict-btn {
+            background: linear-gradient(135deg, #5b5dff 0%, #5b5dff 100%);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(91, 93, 255, 0.3);
+        }
+
+        .sample-btn {
+            background: transparent;
+            color: #5b5dff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .sample-btn:hover {
+            background-color: rgba(91, 93, 255, 0.1);
+        }
+
+        .result-section h3 {
+            font-size: 24px;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .result-placeholder {
+            color: #999;
+            font-size: 15px;
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .result-content {
+            display: none;
+        }
+
+        .result-content.active {
+            display: block;
+        }
+
+        .prediction-box {
+            background: linear-gradient(135deg, #f5f7ff 0%, #f0f2ff 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .prediction-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .prediction-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #5b5dff;
+        }
+
+        .confidence-box {
+            background: linear-gradient(135deg, #f5f7ff 0%, #f0f2ff 100%);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .confidence-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .confidence-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #5b5dff;
+        }
+
+        .demo-tips {
+            margin-top: 40px;
+        }
+
+        .demo-tips h4 {
+            font-size: 16px;
+            color: #1a1a1a;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .demo-tips ul {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .demo-tips li {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .demo-tips li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #5b5dff;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 32px;
+            }
+
+            .form-actions {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Performance Predictor</h2>
-    <form id="predictForm">
-        <div class="form-group">
-            <label>Attendance (%)</label>
-            <input type="number" id="attendance" min="0" max="100" required>
-        </div>
-        <div class="form-group">
-            <label>Study Hours (per day)</label>
-            <input type="number" id="study_hours" min="0" max="24" required>
-        </div>
-        <div class="form-group">
-            <label>Internal Marks (0-100)</label>
-            <input type="number" id="internal_marks" min="0" max="100" required>
-        </div>
-        <div class="form-group">
-            <label>Assignments Submitted</label>
-            <input type="number" id="assignments" required>
-        </div>
-        <div class="form-group">
-            <label>Activities Participation</label>
-            <select id="activities">
-                <option value="0">No</option>
-                <option value="1">Yes</option>
-            </select>
-        </div>
-        <button type="submit">Predict Performance</button>
-    </form>
+<div class="header">
+    <h1>Student Performance Predictor</h1>
+    <button class="try-btn" onclick="document.querySelector('.main-container').scrollIntoView({ behavior: 'smooth' })">Try it now</button>
+</div>
 
-    <div id="result"></div>
+<div class="main-container">
+    <div class="form-section">
+        <h2>Predict Performance</h2>
+        <p class="form-desc">Fill in a few details. The model will return a prediction and confidence score.</p>
+        
+        <form id="predictForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="attendance">Attendance (%)</label>
+                    <input type="number" id="attendance" min="0" max="100" placeholder="e.g. 85" required>
+                </div>
+                <div class="form-group">
+                    <label for="study_hours">Study Hours (per day)</label>
+                    <input type="number" id="study_hours" min="0" max="24" placeholder="e.g. 3" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="internal_marks">Internal Marks (0-100)</label>
+                    <input type="number" id="internal_marks" min="0" max="100" placeholder="e.g. 72" required>
+                </div>
+                <div class="form-group">
+                    <label for="assignments">Assignments Submitted</label>
+                    <input type="number" id="assignments" placeholder="e.g. 5" required>
+                </div>
+            </div>
+
+            <div class="form-row full">
+                <div class="form-group">
+                    <label for="activities">Activities Participation</label>
+                    <select id="activities" required>
+                        <option value="">Select an option</option>
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="predict-btn">Predict</button>
+                <button type="button" class="sample-btn" onclick="useSampleData()">Use sample</button>
+            </div>
+        </form>
+
+        <div class="demo-tips">
+            <h4>Demo Tips</h4>
+            <ul>
+                <li>Show the confidence meter — it demonstrates model awareness.</li>
+                <li>Try low attendance + low internal marks to show a 'fail' case.</li>
+                <li>Use the sample button for a quick demo-ready payload.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="result-section">
+        <h3>Prediction</h3>
+        <div class="result-placeholder" id="resultPlaceholder">
+            No prediction yet — submit the form to see results.
+        </div>
+        <div class="result-content" id="resultContent">
+            <div class="prediction-box">
+                <div class="prediction-label">Prediction</div>
+                <div class="prediction-value" id="predictionValue">Pass</div>
+            </div>
+            <div class="confidence-box">
+                <div class="confidence-label">Confidence</div>
+                <div class="confidence-value" id="confidenceValue">95%</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
+    function useSampleData() {
+        document.getElementById('attendance').value = 85;
+        document.getElementById('study_hours').value = 3;
+        document.getElementById('internal_marks').value = 72;
+        document.getElementById('assignments').value = 5;
+        document.getElementById('activities').value = 0;
+    }
+
     document.getElementById('predictForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
         const data = {
-            attendance: document.getElementById('attendance').value,
-            study_hours: document.getElementById('study_hours').value,
-            internal_marks: document.getElementById('internal_marks').value,
-            assignments: document.getElementById('assignments').value,
-            activities: document.getElementById('activities').value
+            attendance: parseFloat(document.getElementById('attendance').value),
+            study_hours: parseFloat(document.getElementById('study_hours').value),
+            internal_marks: parseFloat(document.getElementById('internal_marks').value),
+            assignments: parseFloat(document.getElementById('assignments').value),
+            activities: parseFloat(document.getElementById('activities').value)
         };
 
         try {
@@ -70,24 +388,21 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
+            
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
 
             const result = await response.json();
-            const resultDiv = document.getElementById('result');
             
-            // Display Predicted Performance and Confidence 
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = `<strong>Prediction: ${result.prediction}</strong><br>Confidence: ${result.confidence}`;
+            // Update result display
+            document.getElementById('resultPlaceholder').style.display = 'none';
+            document.getElementById('resultContent').classList.add('active');
+            document.getElementById('predictionValue').textContent = result.prediction;
+            document.getElementById('confidenceValue').textContent = result.confidence;
             
-            if (result.prediction === 'Pass') {
-                resultDiv.className = 'pass';
-            } else {
-                resultDiv.className = 'fail';
-            }
         } catch (error) {
-            alert('Error connecting to backend');
+            alert('Error connecting to backend: ' + error.message);
         }
     });
 </script>
