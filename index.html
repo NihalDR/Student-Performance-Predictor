@@ -263,6 +263,40 @@
             color: #5b5dff;
         }
 
+        .remarks-section {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #e8e8e8;
+        }
+
+        .remarks-section h4 {
+            font-size: 16px;
+            color: #1a1a1a;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .remarks-box {
+            background: linear-gradient(135deg, #fff9e6 0%, #fff3cc 100%);
+            border-left: 4px solid #ffc107;
+            border-radius: 8px;
+            padding: 18px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .remarks-box.warning {
+            background: linear-gradient(135deg, #ffe8e8 0%, #ffcccc 100%);
+            border-left-color: #ff6b6b;
+        }
+
+        .remarks-box strong {
+            color: #1a1a1a;
+            font-weight: 700;
+        }
+
         @media (max-width: 768px) {
             .main-container {
                 grid-template-columns: 1fr;
@@ -358,6 +392,11 @@
                 <div class="confidence-label">Confidence</div>
                 <div class="confidence-value" id="confidenceValue">95%</div>
             </div>
+            
+            <div class="remarks-section">
+                <h4>📚 Remarks & Suggestions</h4>
+                <div id="remarksContainer"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -369,6 +408,105 @@
         document.getElementById('internal_marks').value = 72;
         document.getElementById('assignments').value = 5;
         document.getElementById('activities').value = 0;
+    }
+
+    function generateRemarks(data, prediction) {
+        const remarks = [];
+        
+        // Attendance feedback
+        if (data.attendance < 75) {
+            remarks.push({
+                type: 'warning',
+                text: '<strong>📍 Attendance:</strong> Your attendance is below 75%. This is critical! Try to attend at least 75% of classes regularly. Consistent attendance improves understanding and shows commitment.'
+            });
+        } else if (data.attendance < 90) {
+            remarks.push({
+                type: 'normal',
+                text: '<strong>📍 Attendance:</strong> Good effort! Push to reach 90%+ attendance. Every class matters for better comprehension.'
+            });
+        } else {
+            remarks.push({
+                type: 'normal',
+                text: '<strong>📍 Attendance:</strong> Excellent attendance! Keep up this consistency—it\'s a key factor in your success.'
+            });
+        }
+
+        // Study Hours feedback
+        if (data.study_hours < 2) {
+            remarks.push({
+                type: 'warning',
+                text: '<strong>⏰ Study Hours:</strong> You\'re studying less than 2 hours per day. Increase your study time to at least 2-3 hours daily for better concept clarity.'
+            });
+        } else if (data.study_hours < 4) {
+            remarks.push({
+                type: 'normal',
+                text: '<strong>⏰ Study Hours:</strong> Good dedication! Aim for 3-4 hours of focused study daily to strengthen your concepts.'
+            });
+        } else {
+            remarks.push({
+                type: 'normal',
+                text: '<strong>⏰ Study Hours:</strong> Great work! Your consistent study schedule is paying off. Maintain this discipline.'
+            });
+        }
+
+        // Internal Marks feedback
+        if (data.internal_marks < 50) {
+            remarks.push({
+                type: 'warning',
+                text: '<strong>📝 Internal Marks:</strong> Your internal marks are concerning. Focus on understanding core concepts, complete assignments on time, and participate in class activities.'
+            });
+        } else if (data.internal_marks < 75) {
+            remarks.push({
+                type: 'normal',
+                text: '<strong>📝 Internal Marks:</strong> You\'re doing reasonably well. Review weak areas and aim for 75+ marks by practicing more problems.'
+            });
+        } else {
+            remarks.push({
+                type: 'normal',
+                text: '<strong>📝 Internal Marks:</strong> Excellent marks! Your efforts in understanding the subject are evident. Keep this momentum going.'
+            });
+        }
+
+        // Assignments feedback
+        if (data.assignments < 5) {
+            remarks.push({
+                type: 'warning',
+                text: '<strong>✅ Assignments:</strong> Submit all assignments on time! Assignments reinforce learning and boost internal marks. Don\'t skip them.'
+            });
+        } else {
+            remarks.push({
+                type: 'normal',
+                text: '<strong>✅ Assignments:</strong> Great! You\'re submitting assignments regularly. This shows responsibility and helps consolidate concepts.'
+            });
+        }
+
+        // Activities participation feedback
+        if (data.activities === 0) {
+            remarks.push({
+                type: 'normal',
+                text: '<strong>🎯 Activities:</strong> Consider participating in academic activities, seminars, and projects. They enhance practical learning and improve overall performance.'
+            });
+        } else {
+            remarks.push({
+                type: 'normal',
+                text: '<strong>🎯 Activities:</strong> Excellent! Your participation in activities shows well-rounded development. Keep engaging with extra-curricular academic opportunities.'
+            });
+        }
+
+        // Overall prediction feedback
+        if (prediction === 'Pass') {
+            remarks.push({
+                type: 'normal',
+                text: '<strong>🎉 Overall:</strong> You\'re on track to pass! Maintain consistency in attendance, study, and assignments. Small improvements can boost your marks significantly.'
+            });
+        } else {
+            remarks.push({
+                type: 'warning',
+                text: '<strong>⚠️ Overall:</strong> You\'re at risk of failing. Immediate action needed! Focus on improving attendance, increasing study hours, and seeking help from teachers or tutors.'
+            });
+        }
+
+        return remarks;
     }
 
     document.getElementById('predictForm').addEventListener('submit', async function(e) {
@@ -400,6 +538,18 @@
             document.getElementById('resultContent').classList.add('active');
             document.getElementById('predictionValue').textContent = result.prediction;
             document.getElementById('confidenceValue').textContent = result.confidence;
+            
+            // Generate and display remarks
+            const remarks = generateRemarks(data, result.prediction);
+            const remarksContainer = document.getElementById('remarksContainer');
+            remarksContainer.innerHTML = '';
+            
+            remarks.forEach(remark => {
+                const remarksBox = document.createElement('div');
+                remarksBox.className = 'remarks-box' + (remark.type === 'warning' ? ' warning' : '');
+                remarksBox.innerHTML = remark.text;
+                remarksContainer.appendChild(remarksBox);
+            });
             
         } catch (error) {
             alert('Error connecting to backend: ' + error.message);
