@@ -232,6 +232,45 @@
             color: #5b5dff;
         }
 
+        .risk-box {
+            background: linear-gradient(135deg, #f5f7ff 0%, #f0f2ff 100%);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .risk-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .risk-value {
+            font-size: 24px;
+            font-weight: 700;
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .risk-low {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .risk-medium {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .risk-high {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
         .demo-tips {
             margin-top: 40px;
         }
@@ -331,6 +370,23 @@
         <form id="predictForm">
             <div class="form-row">
                 <div class="form-group">
+                    <label for="name">Student Name</label>
+                    <input type="text" id="name" placeholder="e.g. John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label for="year">Year</label>
+                    <select id="year" required>
+                        <option value="">Select Year</option>
+                        <option value="1">1st Year</option>
+                        <option value="2">2nd Year</option>
+                        <option value="3">3rd Year</option>
+                        <option value="4">4th Year</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
                     <label for="attendance">Attendance (%)</label>
                     <input type="number" id="attendance" min="0" max="100" placeholder="e.g. 85" required>
                 </div>
@@ -384,6 +440,10 @@
             No prediction yet — submit the form to see results.
         </div>
         <div class="result-content" id="resultContent">
+            <div style="background: linear-gradient(135deg, #e0e7ff 0%, #cffafe 100%); padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center;">
+                <h4 style="font-size: 18px; color: #333; margin: 0 0 8px 0;" id="studentNameDisplay">Student Name</h4>
+                <p style="color: #666; margin: 0; font-size: 14px;" id="studentYearDisplay">Year</p>
+            </div>
             <div class="prediction-box">
                 <div class="prediction-label">Prediction</div>
                 <div class="prediction-value" id="predictionValue">Pass</div>
@@ -391,6 +451,10 @@
             <div class="confidence-box">
                 <div class="confidence-label">Confidence</div>
                 <div class="confidence-value" id="confidenceValue">95%</div>
+            </div>
+            <div class="risk-box">
+                <div class="risk-label">Risk Category</div>
+                <div class="risk-value" id="riskValue">Low Risk</div>
             </div>
             
             <div class="remarks-section">
@@ -402,7 +466,44 @@
 </div>
 
 <script>
+    function calculateRiskCategory(data) {
+        // Calculate risk score based on metrics
+        let riskScore = 0;
+        
+        // Attendance risk (0-30 points)
+        if (data.attendance < 60) riskScore += 30;
+        else if (data.attendance < 75) riskScore += 20;
+        else if (data.attendance < 90) riskScore += 10;
+        
+        // Internal marks risk (0-30 points)
+        if (data.internal_marks < 40) riskScore += 30;
+        else if (data.internal_marks < 60) riskScore += 20;
+        else if (data.internal_marks < 75) riskScore += 10;
+        
+        // Study hours risk (0-20 points)
+        if (data.study_hours < 1.5) riskScore += 20;
+        else if (data.study_hours < 2.5) riskScore += 10;
+        
+        // Assignments risk (0-15 points)
+        if (data.assignments < 3) riskScore += 15;
+        else if (data.assignments < 5) riskScore += 10;
+        
+        // Activities participation (0-5 points)
+        if (data.activities === 0) riskScore += 5;
+        
+        // Determine risk category
+        if (riskScore <= 20) {
+            return { category: 'Low Risk', class: 'risk-low', description: '✅ You\'re in good standing. Keep maintaining your performance!' };
+        } else if (riskScore <= 50) {
+            return { category: 'Medium Risk', class: 'risk-medium', description: '⚠️ You need some improvement. Focus on weak areas.' };
+        } else {
+            return { category: 'High Risk', class: 'risk-high', description: '🚨 Critical attention needed. Immediate action required!' };
+        }
+    }
+
     function useSampleData() {
+        document.getElementById('name').value = 'John Doe';
+        document.getElementById('year').value = 2;
         document.getElementById('attendance').value = 85;
         document.getElementById('study_hours').value = 3;
         document.getElementById('internal_marks').value = 72;
@@ -512,6 +613,9 @@
     document.getElementById('predictForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
+        const studentName = document.getElementById('name').value;
+        const studentYear = document.getElementById('year').value;
+        
         const data = {
             attendance: parseFloat(document.getElementById('attendance').value),
             study_hours: parseFloat(document.getElementById('study_hours').value),
@@ -533,11 +637,21 @@
 
             const result = await response.json();
             
+            // Calculate risk category
+            const riskInfo = calculateRiskCategory(data);
+            
             // Update result display
             document.getElementById('resultPlaceholder').style.display = 'none';
             document.getElementById('resultContent').classList.add('active');
+            document.getElementById('studentNameDisplay').textContent = studentName;
+            document.getElementById('studentYearDisplay').textContent = 'Year ' + studentYear;
             document.getElementById('predictionValue').textContent = result.prediction;
             document.getElementById('confidenceValue').textContent = result.confidence;
+            
+            // Update risk category display
+            const riskValueElement = document.getElementById('riskValue');
+            riskValueElement.textContent = riskInfo.category;
+            riskValueElement.className = 'risk-value ' + riskInfo.class;
             
             // Generate and display remarks
             const remarks = generateRemarks(data, result.prediction);
