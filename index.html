@@ -7,6 +7,8 @@
     
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Confetti Library for Celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
@@ -44,6 +46,16 @@
             padding: 20px;
             min-height: 100vh;
             transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-entry {
+            animation: fadeInUp 0.6s ease-out forwards;
         }
 
         /* --- Header --- */
@@ -226,20 +238,26 @@
         #optimizeBtn { background: var(--success); color: white; display: none; }
         #optimizeBtn:hover { filter: brightness(95%); }
 
-        #resetBtn {
+        .secondary-btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 0.5rem;
+        }
+        
+        .secondary-btn {
             background: transparent;
             color: var(--text);
             border: 1px solid var(--border);
-            margin-top: 0.5rem;
-            opacity: 0.8;
+            margin-top: 0 !important; /* Override default button margin */
+            font-size: 0.9rem;
         }
-        #resetBtn:hover { background: var(--bg); opacity: 1; }
+        .secondary-btn:hover { background: var(--bg); }
 
         #printBtn { 
             background: var(--card-bg); 
             color: var(--text); 
             border: 1px solid var(--border); 
-            margin-top: 0.5rem;
+            margin-top: 1rem;
             display: none;
         }
         #printBtn:hover { background: var(--bg); }
@@ -360,7 +378,7 @@
 
         /* --- Print Styles --- */
         @media print {
-            .input-panel, .theme-toggle, .lang-select, #printBtn, #optimizeBtn, #resetBtn, .history-panel, #toast-container { display: none !important; }
+            .input-panel, .theme-toggle, .lang-select, #printBtn, #optimizeBtn, .secondary-btn-group, .history-panel, #toast-container { display: none !important; }
             .main-wrapper { display: block; max-width: 100%; }
             body { background: white; color: black; padding: 0; }
             .chart-card, .result-header { 
@@ -472,9 +490,14 @@
             <i class="fas fa-magic"></i> <span data-i18n="btnPath">Calculate Path to Pass</span>
         </button>
 
-        <button onclick="resetForm()" id="resetBtn">
-            <i class="fas fa-undo"></i> <span data-i18n="btnReset">Reset Form</span>
-        </button>
+        <div class="secondary-btn-group">
+            <button onclick="fillDemoData()" class="secondary-btn" title="Fill with random valid data">
+                <i class="fas fa-bolt"></i> Demo Fill
+            </button>
+            <button onclick="resetForm()" class="secondary-btn" id="resetBtn">
+                <i class="fas fa-undo"></i> <span data-i18n="btnReset">Reset</span>
+            </button>
+        </div>
         
         <button onclick="window.print()" id="printBtn">
             <i class="fas fa-file-pdf"></i> <span data-i18n="btnPrint">Download Report</span>
@@ -492,7 +515,7 @@
         </div>
 
         <!-- Result Header -->
-        <div class="result-header" id="resultHeader">
+        <div class="result-header animate-entry" id="resultHeader">
             <div class="result-banner">
                 <h2 style="margin:0; opacity:0.8;"><span data-i18n="analysisFor">Analysis for</span> <span id="resName" style="color:var(--primary)">---</span></h2>
                 <div id="statusBadge" class="status-badge">---</div>
@@ -501,7 +524,7 @@
         </div>
 
         <!-- Charts Grid -->
-        <div class="charts-grid" id="chartsGrid">
+        <div class="charts-grid animate-entry" id="chartsGrid">
             
             <!-- Chart 1: Probability -->
             <div class="chart-card">
@@ -528,7 +551,7 @@
         </div>
 
         <!-- History Table -->
-        <div class="history-panel" id="historyPanel">
+        <div class="history-panel animate-entry" id="historyPanel">
             <h3 style="margin:0 0 1rem 0; display:flex; align-items:center; gap:10px;">
                 <i class="fas fa-history"></i> <span data-i18n="historyTitle">Recent Predictions</span>
             </h3>
@@ -573,7 +596,7 @@
             optYes: 'Active Participation',
             btnAnalyze: 'Analyze Performance',
             btnPath: 'Calculate Path to Pass',
-            btnReset: 'Reset Form',
+            btnReset: 'Reset',
             btnPrint: 'Download Report',
             readyTitle: 'Ready to Analyze',
             readyDesc: 'Enter student details on the left and click "Analyze Performance" to see the AI prediction.',
@@ -877,6 +900,25 @@
         };
     }
     
+    function fillDemoData() {
+        document.getElementById('student_name').value = "Demo Student";
+        document.getElementById('student_id').value = "DEMO-123";
+        
+        // Randomize slightly for variety
+        const att = 70 + Math.floor(Math.random() * 20);
+        const marks = 60 + Math.floor(Math.random() * 30);
+        const study = 3 + Math.floor(Math.random() * 5);
+        
+        document.getElementById('attendance').value = att;
+        document.getElementById('study_hours').value = study;
+        document.getElementById('internal_marks').value = marks;
+        document.getElementById('assignments').value = 9;
+        document.getElementById('activities').value = "1";
+        
+        ['attendance', 'study_hours', 'internal_marks', 'assignments'].forEach(id => syncInputs(id));
+        showToast("Demo data filled!", "success");
+    }
+    
     function resetForm() {
         document.getElementById('student_name').value = '';
         document.getElementById('student_id').value = '';
@@ -983,8 +1025,17 @@
             renderCharts(data, result);
             addToHistory(result);
             
-            if(isPass) showToast(`Prediction Complete: Pass`, "success");
-            else showToast(`Prediction Complete: Fail`, "error");
+            if(isPass) {
+                showToast(`Prediction Complete: Pass`, "success");
+                // CONFETTI CELEBRATION
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            } else {
+                showToast(`Prediction Complete: Fail`, "error");
+            }
 
         } catch (error) {
             showToast("Could not connect to server.", "error");
