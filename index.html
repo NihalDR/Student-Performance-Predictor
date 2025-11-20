@@ -112,8 +112,19 @@
         }
 
         .form-group { margin-bottom: 1.2rem; }
-        label { display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.9rem; }
+        label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.9rem; }
 
+        /* Tooltip Icon */
+        .info-icon {
+            color: var(--primary);
+            opacity: 0.6;
+            cursor: help;
+            margin-left: 5px;
+            font-size: 0.8rem;
+        }
+        .info-icon:hover { opacity: 1; }
+
+        /* Input Styling */
         input[type="text"], select {
             width: 100%;
             padding: 0.7rem;
@@ -123,17 +134,50 @@
             border-radius: 8px;
             box-sizing: border-box;
             font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        /* Validation Error State */
+        .input-error {
+            border-color: var(--danger) !important;
+            animation: shake 0.4s ease-in-out;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* Synced Input Container */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* Number Input for Synced Sliders */
+        .number-input {
+            width: 70px;
+            padding: 0.3rem;
+            text-align: center;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--input-bg);
+            color: var(--text);
+            font-weight: bold;
         }
 
         /* Range Slider Styling */
         input[type="range"] {
-            width: 100%;
+            flex-grow: 1;
             height: 6px;
             background: var(--border);
             border-radius: 5px;
             outline: none;
             -webkit-appearance: none;
-            margin-top: 0.5rem;
+            margin-top: 0;
             transition: accent-color 0.3s ease;
         }
         input[type="range"]::-webkit-slider-thumb {
@@ -152,23 +196,11 @@
         input[type="range"].bad-val { accent-color: #ef4444; }
         input[type="range"].mid-val { accent-color: #f59e0b; }
         input[type="range"].good-val { accent-color: #10b981; }
-
-        /* Explicit fallback for thumb color if accent-color isn't supported fully */
+        
+        /* Explicit fallback */
         input[type="range"].bad-val::-webkit-slider-thumb { background: #ef4444; }
         input[type="range"].mid-val::-webkit-slider-thumb { background: #f59e0b; }
         input[type="range"].good-val::-webkit-slider-thumb { background: #10b981; }
-
-
-        .value-badge { 
-            float: right; 
-            background: var(--primary); 
-            color: white;
-            padding: 2px 8px; 
-            border-radius: 12px; 
-            font-size: 0.85rem; 
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
 
         /* Buttons */
         button {
@@ -194,6 +226,15 @@
         #optimizeBtn { background: var(--success); color: white; display: none; }
         #optimizeBtn:hover { filter: brightness(95%); }
 
+        #resetBtn {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+            margin-top: 0.5rem;
+            opacity: 0.8;
+        }
+        #resetBtn:hover { background: var(--bg); opacity: 1; }
+
         #printBtn { 
             background: var(--card-bg); 
             color: var(--text); 
@@ -209,12 +250,19 @@
         /* Result Header */
         .result-header {
             background: var(--card-bg);
-            padding: 2rem;
+            padding: 0;
             border-radius: 16px;
             box-shadow: var(--shadow);
             text-align: center;
             display: none; /* Hidden by default */
             border: 1px solid var(--border);
+            overflow: hidden;
+        }
+        
+        .result-banner {
+            padding: 1.5rem;
+            background: linear-gradient(to right, var(--bg), var(--card-bg));
+            border-bottom: 1px solid var(--border);
         }
 
         .status-badge {
@@ -230,11 +278,11 @@
         .status-fail { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
 
         .advice-box {
-            background: rgba(99, 102, 241, 0.1);
+            background: var(--bg);
             border-left: 4px solid var(--primary);
-            padding: 1rem;
+            padding: 1.5rem;
+            margin: 1rem;
             border-radius: 8px;
-            margin-top: 1rem;
             display: none;
             text-align: left;
             line-height: 1.6;
@@ -312,7 +360,7 @@
 
         /* --- Print Styles --- */
         @media print {
-            .input-panel, .theme-toggle, .lang-select, #printBtn, #optimizeBtn, .history-panel, #toast-container { display: none !important; }
+            .input-panel, .theme-toggle, .lang-select, #printBtn, #optimizeBtn, #resetBtn, .history-panel, #toast-container { display: none !important; }
             .main-wrapper { display: block; max-width: 100%; }
             body { background: white; color: black; padding: 0; }
             .chart-card, .result-header { 
@@ -362,34 +410,50 @@
     <div class="input-panel">
         <div class="section-title" data-i18n="identity">Identity</div>
         <div class="form-group">
-            <label data-i18n="labelName">Name</label>
+            <label><span data-i18n="labelName">Name</span> <i class="fas fa-info-circle info-icon" title="Enter full student name"></i></label>
             <input type="text" id="student_name" placeholder="e.g. John Doe">
         </div>
         <div class="form-group">
-            <label data-i18n="labelID">Student ID</label>
+            <label><span data-i18n="labelID">Student ID</span> <i class="fas fa-info-circle info-icon" title="Unique student identifier"></i></label>
             <input type="text" id="student_id" placeholder="e.g. STU-2025-001">
         </div>
 
         <div class="section-title" data-i18n="metrics">Performance Metrics</div>
         
+        <!-- Attendance -->
         <div class="form-group">
-            <label><span data-i18n="labelAttendance">Attendance</span> <span id="val-attendance" class="value-badge">75%</span></label>
-            <input type="range" id="attendance" min="0" max="100" value="75" oninput="updateVal('attendance', '%')">
+            <label><span data-i18n="labelAttendance">Attendance</span> <i class="fas fa-info-circle info-icon" title="Percentage of classes attended"></i></label>
+            <div class="slider-container">
+                <input type="range" id="attendance" min="0" max="100" value="75" oninput="syncInputs('attendance')">
+                <input type="number" id="attendance_num" class="number-input" min="0" max="100" value="75" oninput="syncInputs('attendance', true)">
+            </div>
         </div>
 
+        <!-- Study Hours -->
         <div class="form-group">
-            <label><span data-i18n="labelStudy">Study Hours</span> <span id="val-study" class="value-badge">5h</span></label>
-            <input type="range" id="study_hours" min="0" max="20" value="5" oninput="updateVal('study', 'h')">
+            <label><span data-i18n="labelStudy">Study Hours</span> <i class="fas fa-info-circle info-icon" title="Average self-study hours per week"></i></label>
+            <div class="slider-container">
+                <input type="range" id="study_hours" min="0" max="20" value="5" oninput="syncInputs('study_hours')">
+                <input type="number" id="study_hours_num" class="number-input" min="0" max="20" value="5" oninput="syncInputs('study_hours', true)">
+            </div>
         </div>
 
+        <!-- Internal Marks -->
         <div class="form-group">
-            <label><span data-i18n="labelMarks">Internal Marks</span> <span id="val-marks" class="value-badge">60%</span></label>
-            <input type="range" id="internal_marks" min="0" max="100" value="60" oninput="updateVal('marks', '%')">
+            <label><span data-i18n="labelMarks">Internal Marks</span> <i class="fas fa-info-circle info-icon" title="Average marks from internal exams"></i></label>
+            <div class="slider-container">
+                <input type="range" id="internal_marks" min="0" max="100" value="60" oninput="syncInputs('internal_marks')">
+                <input type="number" id="internal_marks_num" class="number-input" min="0" max="100" value="60" oninput="syncInputs('internal_marks', true)">
+            </div>
         </div>
 
+        <!-- Assignments -->
         <div class="form-group">
-            <label><span data-i18n="labelAssignments">Assignments</span> <span id="val-assign" class="value-badge">8</span></label>
-            <input type="range" id="assignments" min="0" max="10" value="8" oninput="updateVal('assign', '')">
+            <label><span data-i18n="labelAssignments">Assignments</span> <i class="fas fa-info-circle info-icon" title="Number of assignments submitted (out of 10)"></i></label>
+            <div class="slider-container">
+                <input type="range" id="assignments" min="0" max="10" value="8" oninput="syncInputs('assignments')">
+                <input type="number" id="assignments_num" class="number-input" min="0" max="10" value="8" oninput="syncInputs('assignments', true)">
+            </div>
         </div>
 
         <div class="form-group">
@@ -406,6 +470,10 @@
         
         <button onclick="optimizePath()" id="optimizeBtn">
             <i class="fas fa-magic"></i> <span data-i18n="btnPath">Calculate Path to Pass</span>
+        </button>
+
+        <button onclick="resetForm()" id="resetBtn">
+            <i class="fas fa-undo"></i> <span data-i18n="btnReset">Reset Form</span>
         </button>
         
         <button onclick="window.print()" id="printBtn">
@@ -425,8 +493,10 @@
 
         <!-- Result Header -->
         <div class="result-header" id="resultHeader">
-            <h2 style="margin:0; opacity:0.8;"><span data-i18n="analysisFor">Analysis for</span> <span id="resName" style="color:var(--primary)">---</span></h2>
-            <div id="statusBadge" class="status-badge">---</div>
+            <div class="result-banner">
+                <h2 style="margin:0; opacity:0.8;"><span data-i18n="analysisFor">Analysis for</span> <span id="resName" style="color:var(--primary)">---</span></h2>
+                <div id="statusBadge" class="status-badge">---</div>
+            </div>
             <div id="adviceBox" class="advice-box"></div>
         </div>
 
@@ -503,6 +573,7 @@
             optYes: 'Active Participation',
             btnAnalyze: 'Analyze Performance',
             btnPath: 'Calculate Path to Pass',
+            btnReset: 'Reset Form',
             btnPrint: 'Download Report',
             readyTitle: 'Ready to Analyze',
             readyDesc: 'Enter student details on the left and click "Analyze Performance" to see the AI prediction.',
@@ -547,6 +618,7 @@
             optYes: 'Participación Activa',
             btnAnalyze: 'Analizar Rendimiento',
             btnPath: 'Calcular Ruta para Aprobar',
+            btnReset: 'Reiniciar',
             btnPrint: 'Descargar Informe',
             readyTitle: 'Listo para Analizar',
             readyDesc: 'Ingrese los detalles a la izquierda y haga clic en "Analizar Rendimiento".',
@@ -591,6 +663,7 @@
             optYes: 'Participation Active',
             btnAnalyze: 'Analyser la Performance',
             btnPath: 'Calculer Chemin de Réussite',
+            btnReset: 'Réinitialiser',
             btnPrint: 'Télécharger Rapport',
             readyTitle: 'Prêt à Analyser',
             readyDesc: 'Entrez les détails à gauche et cliquez sur "Analyser la Performance".',
@@ -635,6 +708,7 @@
             optYes: 'सक्रिय भागीदारी',
             btnAnalyze: 'प्रदर्शन का विश्लेषण करें',
             btnPath: 'पास होने का रास्ता खोजें',
+            btnReset: 'रीसेट',
             btnPrint: 'रिपोर्ट डाउनलोड करें',
             readyTitle: 'विश्लेषण के लिए तैयार',
             readyDesc: 'बाईं ओर छात्र विवरण दर्ज करें और "विश्लेषण करें" पर क्लिक करें।',
@@ -706,6 +780,7 @@
         // Update Buttons
         document.getElementById('predictBtn').innerHTML = '<i class="fas fa-search"></i> ' + translations[lang].btnAnalyze;
         document.getElementById('optimizeBtn').innerHTML = '<i class="fas fa-magic"></i> ' + translations[lang].btnPath;
+        document.getElementById('resetBtn').innerHTML = '<i class="fas fa-undo"></i> ' + translations[lang].btnReset;
     }
 
     changeLanguage(currentLang);
@@ -744,60 +819,85 @@
         }, 3000);
     }
 
-    function updateVal(id, unit) {
-        const map = { 'attendance': 'attendance', 'study': 'study_hours', 'marks': 'internal_marks', 'assign': 'assignments' };
-        const el = document.getElementById(map[id]);
-        const val = parseFloat(el.value);
-        const display = document.getElementById(`val-${id}`);
+    // Updated Sync Inputs function for Two-Way Binding
+    function syncInputs(id, fromNum = false) {
+        const slider = document.getElementById(id);
+        const numberInput = document.getElementById(id + '_num');
         
-        display.innerText = val + unit;
-        
-        // Remove old classes
-        el.classList.remove('bad-val', 'mid-val', 'good-val');
+        if (fromNum) {
+            // Ensure value is within bounds
+            let val = parseFloat(numberInput.value);
+            if(val > parseFloat(numberInput.max)) val = parseFloat(numberInput.max);
+            if(val < parseFloat(numberInput.min)) val = parseFloat(numberInput.min);
+            
+            numberInput.value = val;
+            slider.value = val;
+        } else {
+            numberInput.value = slider.value;
+        }
 
-        // Color Logic with specific visual colors
-        const setBadgeColor = (color) => {
-            display.style.backgroundColor = color;
-        };
+        // Color Logic
+        const val = parseFloat(slider.value);
+        slider.classList.remove('bad-val', 'mid-val', 'good-val');
 
         if(id === 'attendance') {
-            if(val < 60) { el.classList.add('bad-val'); setBadgeColor('#ef4444'); }
-            else if(val < 85) { el.classList.add('mid-val'); setBadgeColor('#f59e0b'); }
-            else { el.classList.add('good-val'); setBadgeColor('#10b981'); }
+            if(val < 60) slider.classList.add('bad-val');
+            else if(val < 85) slider.classList.add('mid-val');
+            else slider.classList.add('good-val');
         }
-        else if(id === 'study') {
-            if(val < 3) { el.classList.add('bad-val'); setBadgeColor('#ef4444'); }
-            else if(val < 6) { el.classList.add('mid-val'); setBadgeColor('#f59e0b'); }
-            else { el.classList.add('good-val'); setBadgeColor('#10b981'); }
+        else if(id === 'study_hours') {
+            if(val < 3) slider.classList.add('bad-val');
+            else if(val < 6) slider.classList.add('mid-val');
+            else slider.classList.add('good-val');
         }
-        else if(id === 'marks') {
-            if(val < 50) { el.classList.add('bad-val'); setBadgeColor('#ef4444'); }
-            else if(val < 75) { el.classList.add('mid-val'); setBadgeColor('#f59e0b'); }
-            else { el.classList.add('good-val'); setBadgeColor('#10b981'); }
+        else if(id === 'internal_marks') {
+            if(val < 50) slider.classList.add('bad-val');
+            else if(val < 75) slider.classList.add('mid-val');
+            else slider.classList.add('good-val');
         }
-        else if(id === 'assign') {
-            if(val < 5) { el.classList.add('bad-val'); setBadgeColor('#ef4444'); }
-            else if(val < 8) { el.classList.add('mid-val'); setBadgeColor('#f59e0b'); }
-            else { el.classList.add('good-val'); setBadgeColor('#10b981'); }
+        else if(id === 'assignments') {
+            if(val < 5) slider.classList.add('bad-val');
+            else if(val < 8) slider.classList.add('mid-val');
+            else slider.classList.add('good-val');
         }
     }
 
-    // Initialize slider colors on load
-    ['attendance', 'study', 'marks', 'assign'].forEach(id => {
-        const map = { 'attendance': '%', 'study': 'h', 'marks': '%', 'assign': '' };
-        updateVal(id, map[id]);
-    });
+    // Initialize colors on load
+    ['attendance', 'study_hours', 'internal_marks', 'assignments'].forEach(id => syncInputs(id));
 
     function getFormData() {
         return {
-            name: document.getElementById('student_name').value || "Student",
-            student_id: document.getElementById('student_id').value || "N/A",
+            name: document.getElementById('student_name').value.trim(),
+            student_id: document.getElementById('student_id').value.trim(),
             attendance: parseFloat(document.getElementById('attendance').value),
             study_hours: parseFloat(document.getElementById('study_hours').value),
             internal_marks: parseFloat(document.getElementById('internal_marks').value),
             assignments: parseFloat(document.getElementById('assignments').value),
             activities: parseFloat(document.getElementById('activities').value)
         };
+    }
+    
+    function resetForm() {
+        document.getElementById('student_name').value = '';
+        document.getElementById('student_id').value = '';
+        
+        // Reset Sliders to defaults
+        document.getElementById('attendance').value = 75;
+        document.getElementById('study_hours').value = 5;
+        document.getElementById('internal_marks').value = 60;
+        document.getElementById('assignments').value = 8;
+        document.getElementById('activities').value = "0";
+        
+        ['attendance', 'study_hours', 'internal_marks', 'assignments'].forEach(id => syncInputs(id));
+        
+        // Hide Dashboard
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('resultHeader').style.display = 'none';
+        document.getElementById('chartsGrid').style.display = 'none';
+        document.getElementById('printBtn').style.display = 'none';
+        document.getElementById('optimizeBtn').style.display = 'none';
+        
+        showToast("Form reset.", "success");
     }
 
     // --- 3. Theme Logic ---
@@ -819,12 +919,26 @@
     async function predictPerformance() {
         const btn = document.getElementById('predictBtn');
         const t = translations[currentLang];
+        const nameInput = document.getElementById('student_name');
+        const idInput = document.getElementById('student_id');
+
+        // Validation: Remove old errors
+        nameInput.classList.remove('input-error');
+        idInput.classList.remove('input-error');
+
+        const data = getFormData();
+
+        if (!data.name || !data.student_id) {
+            showToast("Please enter Name and Student ID", "error");
+            if(!data.name) nameInput.classList.add('input-error');
+            if(!data.student_id) idInput.classList.add('input-error');
+            return;
+        }
 
         btn.disabled = true;
         btn.innerHTML = t.btnProcessing;
 
         try {
-            const data = getFormData();
             // USE LOCAL ABSOLUTE PATH
             const response = await fetch('http://127.0.0.1:5000/predict', {
                 method: 'POST',
