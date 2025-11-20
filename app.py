@@ -3,150 +3,114 @@ from flask_cors import CORS
 import pickle
 import numpy as np
 import os
-from datetime import datetime
-
-# import the training helper so we can create a model if missing
-import train_model
+import google.generativeai as genai
+import train_model_improved
 
 app = Flask(__name__)
-CORS(app)  # Enable Cross-Origin Resource Sharing
+CORS(app)
 
-# Load the trained model or create it if missing
+# --- CONFIGURATION ---
+GEMINI_API_KEY = "AIzaSyA1Tc9odl_5k8wyn-3Q2TnoLswp2ycfh5k"
+
+# Paths to artifacts
 MODEL_PATH = 'model.pkl'
-model = None
-if os.path.exists(MODEL_PATH):
-    with open(MODEL_PATH, 'rb') as f:
-        model = pickle.load(f)
-else:
-    print("model.pkl not found — training model now (this may take a few seconds)...")
-    model = train_model.train_and_save_model(MODEL_PATH)
+SCALER_PATH = 'scaler.pkl'
 
-# Optional: Initialize Google Sheets storage
-try:
-    from google_sheets_config import init_google_sheets
-    google_sheets = init_google_sheets('credentials.json')
-except ImportError:
-    print("ℹ️  Google Sheets integration not available.")
-    google_sheets = None
-except Exception as e:
-    print(f"ℹ️  Google Sheets initialization skipped: {type(e).__name__}")
-    google_sheets = None
+model = None
+scaler = None
+
+def load_artifacts():
+    global model, scaler
+    if os.path.exists(MODEL_PATH) and os.path.exists(SCALER_PATH):
+        print("Loading existing model and scaler...")
+        with open(MODEL_PATH, 'rb') as f:
+            model = pickle.load(f)
+        with open(SCALER_PATH, 'rb') as f:
+            scaler = pickle.load(f)
+    else:
+        print("Artifacts missing. Training new model...")
+        model, scaler = train_model_improved.train_and_save_model(MODEL_PATH, SCALER_PATH)
+
+load_artifacts()
+
+def generate_smart_advice(data, prediction):
+    """
+    Uses Google Gemini to generate personalized study advice.
+    """
+    if not GEMINI_API_KEY:
+        return None
+
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        ai_model = genai.GenerativeModel('gemini-pro')
+        
+        prompt = f"""
+        Act as a supportive academic counselor. A student named {data.get('name')} has these stats:
+        - Attendance: {data.get('attendance')}%
+        - Internal Marks: {data.get('internal_marks')}%
+        - Study Hours: {data.get('study_hours')}/week
+        - Assignments: {data.get('assignments')}/10
+        - Predicted Result: {prediction}
+        
+        Give 2 short, specific, actionable sentences of advice to improve their result. 
+        Address their weakest area directly. Be encouraging but firm. 
+        Output ONLY the advice text.
+        """
+        
+        response = ai_model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        print(f"AI Advice Error: {e}")
+        return None
 
 @app.route('/')
 def home():
-    # Serve the local index.html from project root so Flask can host the frontend
     return send_from_directory('.', 'index.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
         data = request.json
-
-        # Extract features based on the frontend inputs
-        features = [
-            float(data.get('attendance', 0)),
-            float(data.get('study_hours', 0)),
-            float(data.get('internal_marks', 0)),
-            float(data.get('assignments', 0)),
-            float(data.get('activities', 0))
-        ]
-
-        final_features = [np.array(features)]
-
-        if model is None:
-            return jsonify({'error': 'Model not available'}), 500
-
-        prediction = model.predict(final_features)
-        probability = model.predict_proba(final_features)
-
-        result = "Pass" if prediction[0] == 1 else "Fail"
-        confidence = f"{np.max(probability) * 100:.2f}%"
-
-        # Store to Google Sheets if available
-        if google_sheets:
-            try:
-                student_data = {
-                    'name': data.get('name', 'Unknown'),
-                    'year': data.get('year', ''),
-                    'attendance': data.get('attendance', ''),
-                    'study_hours': data.get('study_hours', ''),
-                    'internal_marks': data.get('internal_marks', ''),
-                    'assignments': data.get('assignments', ''),
-                    'activities': data.get('activities', '')
-                }
-                
-                # Debug logging
-                print(f"DEBUG: Received data: {data}")
-                print(f"DEBUG: Student data: {student_data}")
-                
-                prediction_result = {
-                    'prediction': result,
-                    'confidence': confidence.replace('%', '')
-                }
-                
-                # Calculate risk category (same logic as frontend)
-                risk_score = 0
-                attendance = float(data.get('attendance', 0))
-                internal_marks = float(data.get('internal_marks', 0))
-                study_hours = float(data.get('study_hours', 0))
-                assignments = float(data.get('assignments', 0))
-                activities = float(data.get('activities', 0))
-                
-                if attendance < 60: risk_score += 30
-                elif attendance < 75: risk_score += 20
-                elif attendance < 90: risk_score += 10
-                
-                if internal_marks < 40: risk_score += 30
-                elif internal_marks < 60: risk_score += 20
-                elif internal_marks < 75: risk_score += 10
-                
-                if study_hours < 1.5: risk_score += 20
-                elif study_hours < 2.5: risk_score += 10
-                
-                if assignments < 3: risk_score += 15
-                elif assignments < 5: risk_score += 10
-                
-                if activities == 0: risk_score += 5
-                
-                if risk_score <= 20:
-                    risk_category = 'Low Risk'
-                elif risk_score <= 50:
-                    risk_category = 'Medium Risk'
-                else:
-                    risk_category = 'High Risk'
-                
-                google_sheets.add_prediction(student_data, prediction_result, risk_category)
-            except Exception as e:
-                print(f"Error storing to Google Sheets: {e}")
-
-        return jsonify({'prediction': result, 'confidence': confidence})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/stats', methods=['GET'])
-def get_stats():
-    """Get statistics from Google Sheets"""
-    try:
-        if not google_sheets:
-            return jsonify({'error': 'Google Sheets not configured'}), 500
         
-        stats = google_sheets.get_statistics()
-        return jsonify(stats)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # 1. Validation
+        required = ['attendance', 'study_hours', 'internal_marks', 'assignments', 'activities']
+        if not all(k in data for k in required):
+            return jsonify({'error': 'Missing fields'}), 400
 
-@app.route('/student/<name>', methods=['GET'])
-def get_student_data(name):
-    """Get all predictions for a specific student"""
-    try:
-        if not google_sheets:
-            return jsonify({'error': 'Google Sheets not configured'}), 500
+        # 2. Extraction
+        name = data.get('name', 'Student')
+        student_id = data.get('student_id', 'N/A')
         
-        records = google_sheets.get_student_records(name)
-        return jsonify({'student': name, 'records': records})
+        features = np.array([[
+            float(data['attendance']), 
+            float(data['study_hours']), 
+            float(data['internal_marks']), 
+            float(data['assignments']), 
+            float(data['activities'])
+        ]])
+
+        # 3. Prediction
+        scaled_features = scaler.transform(features)
+        pred = model.predict(scaled_features)[0]
+        prob = model.predict_proba(scaled_features)
+        
+        result_text = "Pass" if pred == 1 else "Fail"
+        conf_score = np.max(prob) * 100
+
+        # 4. AI Advice Generation
+        ai_suggestion = generate_smart_advice(data, result_text)
+
+        return jsonify({
+            'name': name,
+            'student_id': student_id,
+            'prediction': result_text,
+            'confidence': f"{conf_score:.2f}%",
+            'raw_probability': float(np.max(prob)),
+            'ai_advice': ai_suggestion
+        })
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-if __name__ == "__main__":
-    # Use explicit host and port for clarity
-    app.run(host='127.0.0.1', port=5000, debug=True)
+if __name__ == '__main__':
+    app.run(debug=True)
