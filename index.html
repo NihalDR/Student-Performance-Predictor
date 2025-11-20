@@ -3,9 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Success Dashboard</title>
+    <title>Student Success AI</title>
+    
+    <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
+        /* --- CSS Variables for Theme --- */
         :root {
             --primary: #6366f1;
             --secondary: #4f46e5;
@@ -14,214 +19,413 @@
             --bg: #f8fafc;
             --card-bg: #ffffff;
             --text: #1e293b;
+            --border: #e2e8f0;
+            --input-bg: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
+        [data-theme="dark"] {
+            --primary: #818cf8;
+            --secondary: #6366f1;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f1f5f9;
+            --border: #334155;
+            --input-bg: #0f172a;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --- Global Styles --- */
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
             padding: 20px;
             min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
         }
 
+        /* --- Header --- */
+        .header-bar {
+            max-width: 1200px;
+            margin: 0 auto 1.5rem auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .theme-toggle, .lang-select {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .theme-toggle:hover, .lang-select:hover { 
+            border-color: var(--primary);
+        }
+
+        /* --- Main Layout --- */
         .main-wrapper {
             max-width: 1200px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: 350px 1fr; /* Inputs on left, Dashboard on right */
+            grid-template-columns: 350px 1fr;
             gap: 2rem;
         }
 
-        /* --- Input Section Styling --- */
+        /* --- Input Panel (Left) --- */
         .input-panel {
             background: var(--card-bg);
             padding: 2rem;
             border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow);
             height: fit-content;
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            color: var(--primary);
-            margin-bottom: 1.5rem;
-            text-align: center;
+            border: 1px solid var(--border);
         }
 
         .section-title {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            color: #64748b;
+            color: var(--text);
+            opacity: 0.7;
             margin: 1.5rem 0 1rem 0;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border);
             padding-bottom: 0.5rem;
         }
 
         .form-group { margin-bottom: 1.2rem; }
         label { display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.9rem; }
-        
+
         input[type="text"], select {
             width: 100%;
-            padding: 0.6rem;
-            border: 1px solid #cbd5e1;
+            padding: 0.7rem;
+            background: var(--input-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
             border-radius: 8px;
             box-sizing: border-box;
+            font-size: 1rem;
         }
 
-        input[type="range"] { width: 100%; accent-color: var(--primary); cursor: pointer; }
+        /* Range Slider Styling */
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+            margin-top: 0.5rem;
+            transition: accent-color 0.3s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary); /* Default fallback */
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s;
+            box-shadow: 0 0 0 2px white, 0 2px 4px rgba(0,0,0,0.2);
+        }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        /* Dynamic Slider Colors */
+        input[type="range"].bad-val { accent-color: #ef4444; }
+        input[type="range"].mid-val { accent-color: #f59e0b; }
+        input[type="range"].good-val { accent-color: #10b981; }
+
+        /* Explicit fallback for thumb color if accent-color isn't supported fully */
+        input[type="range"].bad-val::-webkit-slider-thumb { background: #ef4444; }
+        input[type="range"].mid-val::-webkit-slider-thumb { background: #f59e0b; }
+        input[type="range"].good-val::-webkit-slider-thumb { background: #10b981; }
+
+
         .value-badge { 
             float: right; 
-            background: #e0e7ff; 
-            color: var(--secondary); 
+            background: var(--primary); 
+            color: white;
             padding: 2px 8px; 
             border-radius: 12px; 
             font-size: 0.85rem; 
+            font-weight: bold;
+            transition: background-color 0.3s;
         }
 
+        /* Buttons */
         button {
             width: 100%;
-            padding: 0.8rem;
+            padding: 0.9rem;
             border-radius: 8px;
             border: none;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
             margin-top: 1rem;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         #predictBtn { background: var(--primary); color: white; }
-        #predictBtn:hover { background: var(--secondary); transform: translateY(-1px); }
-        #predictBtn:disabled { background: #94a3b8; cursor: not-allowed; }
+        #predictBtn:hover { filter: brightness(110%); transform: translateY(-1px); }
+        #predictBtn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
+        
+        #optimizeBtn { background: var(--success); color: white; display: none; }
+        #optimizeBtn:hover { filter: brightness(95%); }
 
-        #optimizeBtn { background: var(--success); color: white; display: none; margin-top: 1rem; }
-        #optimizeBtn:hover { filter: brightness(90%); }
-
-        /* --- Dashboard Section Styling --- */
-        .dashboard-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
+        #printBtn { 
+            background: var(--card-bg); 
+            color: var(--text); 
+            border: 1px solid var(--border); 
+            margin-top: 0.5rem;
+            display: none;
         }
+        #printBtn:hover { background: var(--bg); }
 
+        /* --- Dashboard (Right) --- */
+        .dashboard-container { display: flex; flex-direction: column; gap: 1.5rem; }
+
+        /* Result Header */
         .result-header {
             background: var(--card-bg);
-            padding: 1.5rem;
+            padding: 2rem;
             border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow);
             text-align: center;
-            display: none; /* Hidden initially */
+            display: none; /* Hidden by default */
+            border: 1px solid var(--border);
         }
 
         .status-badge {
             display: inline-block;
-            padding: 0.5rem 2rem;
+            padding: 0.5rem 3rem;
             border-radius: 50px;
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: 800;
             margin: 1rem 0;
+            letter-spacing: 1px;
         }
-        .status-pass { background: #dcfce7; color: #166534; }
-        .status-fail { background: #fee2e2; color: #991b1b; }
+        .status-pass { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .status-fail { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
 
+        .advice-box {
+            background: rgba(99, 102, 241, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            display: none;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .ai-badge {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;
+            margin-right: 8px; vertical-align: middle;
+            text-transform: uppercase;
+        }
+
+        /* Charts Grid */
         .charts-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1.5rem;
-            display: none; /* Hidden initially */
+            display: none; /* Hidden by default */
         }
 
         .chart-card {
             background: var(--card-bg);
             padding: 1.5rem;
             border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            min-height: 300px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            min-height: 300px;
         }
+        
+        .chart-card h4 { margin: 0 0 1rem 0; color: var(--text); opacity: 0.8; }
 
-        .chart-title {
-            font-weight: 600;
-            color: #475569;
-            margin-bottom: 1rem;
-        }
-
-        .advice-box {
-            background: #fff;
-            border-left: 4px solid var(--primary);
-            padding: 1rem;
-            border-radius: 8px;
+        /* --- History Table --- */
+        .history-panel {
             margin-top: 1rem;
-            line-height: 1.6;
-            display: none;
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            display: none; /* Hidden if empty */
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th { text-align: left; padding: 1rem; color: var(--primary); border-bottom: 2px solid var(--border); white-space: nowrap;}
+        td { padding: 1rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        tr:last-child td { border-bottom: none; }
+
+        /* --- Empty State --- */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text);
+            opacity: 0.6;
+        }
+        .empty-state i { font-size: 3rem; margin-bottom: 1rem; }
+
+        /* --- Toast Notification --- */
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        /* --- Responsive --- */
         @media (max-width: 900px) {
             .main-wrapper { grid-template-columns: 1fr; }
+            .input-panel { order: 1; }
+            .dashboard-container { order: 2; }
+        }
+
+        /* --- Print Styles --- */
+        @media print {
+            .input-panel, .theme-toggle, .lang-select, #printBtn, #optimizeBtn, .history-panel, #toast-container { display: none !important; }
+            .main-wrapper { display: block; max-width: 100%; }
+            body { background: white; color: black; padding: 0; }
+            .chart-card, .result-header { 
+                break-inside: avoid; 
+                border: 1px solid #ccc; 
+                box-shadow: none; 
+                margin-bottom: 20px; 
+                background: white;
+                color: black;
+            }
+            .dashboard-container { gap: 20px; }
+            .charts-grid { display: grid !important; grid-template-columns: 1fr 1fr; gap: 20px; }
+            .result-header h2, .advice-box { color: black !important; }
+            .status-pass { border: 2px solid #10b981; color: #10b981; }
+            .status-fail { border: 2px solid #ef4444; color: #ef4444; }
         }
     </style>
 </head>
 <body>
 
+<!-- TOAST CONTAINER -->
+<div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;"></div>
+
+<!-- HEADER -->
+<div class="header-bar">
+    <h1 style="margin:0; color:var(--primary); display:flex; align-items:center; gap:10px;" data-i18n="appTitle">
+        <i class="fas fa-graduation-cap"></i> Student AI
+    </h1>
+    
+    <div class="header-controls">
+        <select id="langSelect" class="lang-select" onchange="changeLanguage(this.value)">
+            <option value="en">🇺🇸 English</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+        </select>
+
+        <button class="theme-toggle" onclick="toggleTheme()">
+            <i class="fas fa-adjust"></i> <span data-i18n="theme">Theme</span>
+        </button>
+    </div>
+</div>
+
 <div class="main-wrapper">
     
-    <!-- LEFT COLUMN: Inputs -->
+    <!-- LEFT COLUMN: Controls -->
     <div class="input-panel">
-        <h1>🎓 Predictor Pro</h1>
-        
-        <div class="section-title">Student Identity</div>
+        <div class="section-title" data-i18n="identity">Identity</div>
         <div class="form-group">
-            <label>Name</label>
-            <input type="text" id="student_name" placeholder="e.g. Alex Smith">
+            <label data-i18n="labelName">Name</label>
+            <input type="text" id="student_name" placeholder="e.g. John Doe">
         </div>
         <div class="form-group">
-            <label>Student ID</label>
-            <input type="text" id="student_id" placeholder="e.g. 2025-001">
+            <label data-i18n="labelID">Student ID</label>
+            <input type="text" id="student_id" placeholder="e.g. STU-2025-001">
         </div>
 
-        <div class="section-title">Academic Metrics</div>
+        <div class="section-title" data-i18n="metrics">Performance Metrics</div>
         
         <div class="form-group">
-            <label>Attendance <span id="val-attendance" class="value-badge">75%</span></label>
-            <input type="range" id="attendance" min="0" max="100" value="75" oninput="updateDisplay('attendance', '%')">
+            <label><span data-i18n="labelAttendance">Attendance</span> <span id="val-attendance" class="value-badge">75%</span></label>
+            <input type="range" id="attendance" min="0" max="100" value="75" oninput="updateVal('attendance', '%')">
         </div>
 
         <div class="form-group">
-            <label>Weekly Study Hours <span id="val-study" class="value-badge">5h</span></label>
-            <input type="range" id="study_hours" min="0" max="20" value="5" oninput="updateDisplay('study', 'h')">
+            <label><span data-i18n="labelStudy">Study Hours</span> <span id="val-study" class="value-badge">5h</span></label>
+            <input type="range" id="study_hours" min="0" max="20" value="5" oninput="updateVal('study', 'h')">
         </div>
 
         <div class="form-group">
-            <label>Internal Marks <span id="val-marks" class="value-badge">60%</span></label>
-            <input type="range" id="internal_marks" min="0" max="100" value="60" oninput="updateDisplay('marks', '%')">
+            <label><span data-i18n="labelMarks">Internal Marks</span> <span id="val-marks" class="value-badge">60%</span></label>
+            <input type="range" id="internal_marks" min="0" max="100" value="60" oninput="updateVal('marks', '%')">
         </div>
 
         <div class="form-group">
-            <label>Assignments (0-10) <span id="val-assign" class="value-badge">8</span></label>
-            <input type="range" id="assignments" min="0" max="10" value="8" oninput="updateDisplay('assign', '')">
+            <label><span data-i18n="labelAssignments">Assignments</span> <span id="val-assign" class="value-badge">8</span></label>
+            <input type="range" id="assignments" min="0" max="10" value="8" oninput="updateVal('assign', '')">
         </div>
 
         <div class="form-group">
-            <label>Extra Activities</label>
+            <label data-i18n="labelActivities">Extra Activities</label>
             <select id="activities">
-                <option value="0">No Participation</option>
-                <option value="1">Active Participation</option>
+                <option value="0" data-i18n="optNo">No Participation</option>
+                <option value="1" data-i18n="optYes">Active Participation</option>
             </select>
         </div>
 
-        <button onclick="predictPerformance()" id="predictBtn">Analyze Performance</button>
-        <button onclick="optimizePath()" id="optimizeBtn">✨ Calculate Path to Pass</button>
+        <button onclick="predictPerformance()" id="predictBtn">
+            <i class="fas fa-search"></i> <span data-i18n="btnAnalyze">Analyze Performance</span>
+        </button>
+        
+        <button onclick="optimizePath()" id="optimizeBtn">
+            <i class="fas fa-magic"></i> <span data-i18n="btnPath">Calculate Path to Pass</span>
+        </button>
+        
+        <button onclick="window.print()" id="printBtn">
+            <i class="fas fa-file-pdf"></i> <span data-i18n="btnPrint">Download Report</span>
+        </button>
     </div>
 
     <!-- RIGHT COLUMN: Dashboard -->
-    <div class="dashboard-panel">
+    <div class="dashboard-container">
         
-        <!-- Header Result -->
+        <!-- Empty State (Shown Initially) -->
+        <div id="emptyState" class="empty-state">
+            <i class="fas fa-robot"></i>
+            <h2 data-i18n="readyTitle">Ready to Analyze</h2>
+            <p data-i18n="readyDesc">Enter student details on the left and click "Analyze Performance" to see the AI prediction.</p>
+        </div>
+
+        <!-- Result Header -->
         <div class="result-header" id="resultHeader">
-            <h2 style="margin:0; color:#64748b;">Prediction for <span id="resName" style="color:var(--primary)">---</span></h2>
+            <h2 style="margin:0; opacity:0.8;"><span data-i18n="analysisFor">Analysis for</span> <span id="resName" style="color:var(--primary)">---</span></h2>
             <div id="statusBadge" class="status-badge">---</div>
             <div id="adviceBox" class="advice-box"></div>
         </div>
@@ -229,49 +433,360 @@
         <!-- Charts Grid -->
         <div class="charts-grid" id="chartsGrid">
             
-            <!-- Chart 1: Pass Probability (Doughnut) -->
+            <!-- Chart 1: Probability -->
             <div class="chart-card">
-                <div class="chart-title">Success Probability</div>
-                <div style="height:200px; width:200px;">
+                <h4 data-i18n="chartConfTitle">AI Confidence</h4>
+                <div style="height:180px; width:180px;">
                     <canvas id="probChart"></canvas>
                 </div>
-                <p id="confText" style="margin-top:1rem; font-weight:bold; color:#64748b;">--</p>
+                <p id="confText" style="font-weight:bold; font-size:1.2rem; margin-top:1rem;">--</p>
             </div>
 
-            <!-- Chart 2: Comparison (Bar) -->
+            <!-- Chart 2: Comparison -->
             <div class="chart-card">
-                <div class="chart-title">You vs. Class Average</div>
+                <h4 data-i18n="chartCompTitle">Vs. Class Average</h4>
                 <canvas id="barChart"></canvas>
             </div>
 
-            <!-- Chart 3: Skills (Radar) -->
+            <!-- Chart 3: Skills -->
             <div class="chart-card" style="grid-column: 1 / -1;">
-                <div class="chart-title">Detailed Metric Analysis</div>
+                <h4 data-i18n="chartSkillTitle">Comprehensive Skill Profile</h4>
                 <div style="height:300px; width:100%;">
                     <canvas id="radarChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <!-- Placeholder State -->
-        <div id="emptyState" style="text-align:center; color:#94a3b8; margin-top:5rem;">
-            <h3 style="margin-bottom:0.5rem;">Ready to Predict</h3>
-            <p>Enter student details on the left to generate the dashboard.</p>
+        <!-- History Table -->
+        <div class="history-panel" id="historyPanel">
+            <h3 style="margin:0 0 1rem 0; display:flex; align-items:center; gap:10px;">
+                <i class="fas fa-history"></i> <span data-i18n="historyTitle">Recent Predictions</span>
+            </h3>
+            <div class="table-wrapper">
+                <table id="historyTable">
+                    <thead>
+                        <tr>
+                            <th data-i18n="thName">Name</th>
+                            <th data-i18n="thResult">Result</th>
+                            <th data-i18n="thConf">Confidence</th>
+                            <th data-i18n="thTime">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
-
     </div>
 </div>
 
 <script>
-    // Chart Instances
-    let probChartInstance = null;
-    let barChartInstance = null;
-    let radarChartInstance = null;
+    // --- 0. Global Variables ---
+    let lastData = null;
+    let lastResult = null;
+    let charts = {};
 
-    function updateDisplay(id, unit) {
-        const map = { 'attendance': 'attendance', 'study': 'study_hours', 'marks': 'internal_marks', 'assign': 'assignments' };
-        document.getElementById(`val-${id}`).innerText = document.getElementById(map[id]).value + unit;
+    // --- 1. Localization / Translations ---
+    const translations = {
+        en: {
+            appTitle: '<i class="fas fa-graduation-cap"></i> Student AI',
+            theme: 'Theme',
+            identity: 'Identity',
+            labelName: 'Name',
+            labelID: 'Student ID',
+            metrics: 'Performance Metrics',
+            labelAttendance: 'Attendance',
+            labelStudy: 'Study Hours (Weekly)',
+            labelMarks: 'Internal Marks',
+            labelAssignments: 'Assignments (0-10)',
+            labelActivities: 'Extra Activities',
+            optNo: 'No Participation',
+            optYes: 'Active Participation',
+            btnAnalyze: 'Analyze Performance',
+            btnPath: 'Calculate Path to Pass',
+            btnPrint: 'Download Report',
+            readyTitle: 'Ready to Analyze',
+            readyDesc: 'Enter student details on the left and click "Analyze Performance" to see the AI prediction.',
+            analysisFor: 'Analysis for',
+            chartConfTitle: 'AI Confidence',
+            chartCompTitle: 'Vs. Class Average',
+            chartSkillTitle: 'Comprehensive Skill Profile',
+            historyTitle: 'Recent Predictions',
+            thName: 'Name',
+            thResult: 'Result',
+            thConf: 'Confidence',
+            thTime: 'Time',
+            pass: 'Pass',
+            fail: 'Fail',
+            onTrack: '✅ <strong>Excellent Work!</strong><br>{name} is demonstrating strong academic performance. Maintain current study habits.',
+            pathFound: '💡 <strong>Path Found!</strong><br>If <strong>{name}</strong> increases study time by <strong>{hours} hours/week</strong> (Total: {total}h), the model predicts a <strong>PASS</strong>.',
+            hardCase: '⚠️ <strong>Hard Case</strong><br>Increasing study hours alone is not enough. Try improving <strong>Attendance</strong> or <strong>Internal Marks</strong>.',
+            chartLabels: ['Attendance', 'Marks', 'Assignments'],
+            chartLabelsRadar: ['Attendance', 'Study Hours', 'Marks', 'Assignments'],
+            chartLabelYou: 'You',
+            chartLabelAvg: 'Class Avg',
+            chartLabelProfile: 'Student Profile',
+            chartConf: 'Confidence',
+            chartUncertainty: 'Uncertainty',
+            btnProcessing: '<i class="fas fa-spinner fa-spin"></i> Processing...',
+            btnCalculating: '<i class="fas fa-spinner fa-spin"></i> Calculating...',
+            btnRecalculate: '<i class="fas fa-magic"></i> Recalculate Path'
+        },
+        es: {
+            appTitle: '<i class="fas fa-graduation-cap"></i> IA Estudiantil',
+            theme: 'Tema',
+            identity: 'Identidad',
+            labelName: 'Nombre',
+            labelID: 'ID Estudiante',
+            metrics: 'Métricas de Rendimiento',
+            labelAttendance: 'Asistencia',
+            labelStudy: 'Horas de Estudio (Semanal)',
+            labelMarks: 'Notas Internas',
+            labelAssignments: 'Tareas (0-10)',
+            labelActivities: 'Actividades Extra',
+            optNo: 'Sin Participación',
+            optYes: 'Participación Activa',
+            btnAnalyze: 'Analizar Rendimiento',
+            btnPath: 'Calcular Ruta para Aprobar',
+            btnPrint: 'Descargar Informe',
+            readyTitle: 'Listo para Analizar',
+            readyDesc: 'Ingrese los detalles a la izquierda y haga clic en "Analizar Rendimiento".',
+            analysisFor: 'Análisis para',
+            chartConfTitle: 'Confianza de IA',
+            chartCompTitle: 'Vs. Promedio de Clase',
+            chartSkillTitle: 'Perfil de Habilidades',
+            historyTitle: 'Predicciones Recientes',
+            thName: 'Nombre',
+            thResult: 'Resultado',
+            thConf: 'Confianza',
+            thTime: 'Hora',
+            pass: 'Aprobar',
+            fail: 'Reprobar',
+            onTrack: '✅ <strong>¡Excelente Trabajo!</strong><br>{name} demuestra un fuerte rendimiento académico. Mantenga los hábitos de estudio.',
+            pathFound: '💡 <strong>¡Ruta Encontrada!</strong><br>Si <strong>{name}</strong> aumenta el estudio <strong>{hours} horas/sem</strong> (Total: {total}h), el modelo predice <strong>APROBAR</strong>.',
+            hardCase: '⚠️ <strong>Caso Difícil</strong><br>Aumentar horas de estudio no es suficiente. Intente mejorar <strong>Asistencia</strong> o <strong>Notas</strong>.',
+            chartLabels: ['Asistencia', 'Notas', 'Tareas'],
+            chartLabelsRadar: ['Asistencia', 'Horas Estudio', 'Notas', 'Tareas'],
+            chartLabelYou: 'Tú',
+            chartLabelAvg: 'Promedio',
+            chartLabelProfile: 'Perfil',
+            chartConf: 'Confianza',
+            chartUncertainty: 'Incertidumbre',
+            btnProcessing: '<i class="fas fa-spinner fa-spin"></i> Procesando...',
+            btnCalculating: '<i class="fas fa-spinner fa-spin"></i> Calculando...',
+            btnRecalculate: '<i class="fas fa-magic"></i> Recalcular Ruta'
+        },
+        fr: {
+            appTitle: '<i class="fas fa-graduation-cap"></i> IA Étudiante',
+            theme: 'Thème',
+            identity: 'Identité',
+            labelName: 'Nom',
+            labelID: 'ID Étudiant',
+            metrics: 'Métriques de Performance',
+            labelAttendance: 'Assiduité',
+            labelStudy: 'Heures d\'Étude (Hebdo)',
+            labelMarks: 'Notes Internes',
+            labelAssignments: 'Devoirs (0-10)',
+            labelActivities: 'Activités Extra',
+            optNo: 'Aucune Participation',
+            optYes: 'Participation Active',
+            btnAnalyze: 'Analyser la Performance',
+            btnPath: 'Calculer Chemin de Réussite',
+            btnPrint: 'Télécharger Rapport',
+            readyTitle: 'Prêt à Analyser',
+            readyDesc: 'Entrez les détails à gauche et cliquez sur "Analyser la Performance".',
+            analysisFor: 'Analyse pour',
+            chartConfTitle: 'Confiance IA',
+            chartCompTitle: 'Vs. Moyenne de Classe',
+            chartSkillTitle: 'Profil de Compétences',
+            historyTitle: 'Prédictions Récentes',
+            thName: 'Nom',
+            thResult: 'Résultat',
+            thConf: 'Confiance',
+            thTime: 'Heure',
+            pass: 'Réussite',
+            fail: 'Échec',
+            onTrack: '✅ <strong>Excellent Travail !</strong><br>{name} démontre une forte performance académique. Maintenez les habitudes.',
+            pathFound: '💡 <strong>Chemin Trouvé !</strong><br>Si <strong>{name}</strong> étudie <strong>{hours}h de plus/sem</strong> (Total: {total}h), le modèle prédit <strong>RÉUSSITE</strong>.',
+            hardCase: '⚠️ <strong>Cas Difficile</strong><br>Augmenter les heures d\'étude ne suffit pas. Essayez d\'améliorer <strong>Assiduité</strong> ou <strong>Notes</strong>.',
+            chartLabels: ['Assiduité', 'Notes', 'Devoirs'],
+            chartLabelsRadar: ['Assiduité', 'Heures Étude', 'Notes', 'Devoirs'],
+            chartLabelYou: 'Vous',
+            chartLabelAvg: 'Moyenne',
+            chartLabelProfile: 'Profil',
+            chartConf: 'Confiance',
+            chartUncertainty: 'Incertitude',
+            btnProcessing: '<i class="fas fa-spinner fa-spin"></i> Traitement...',
+            btnCalculating: '<i class="fas fa-spinner fa-spin"></i> Calcul...',
+            btnRecalculate: '<i class="fas fa-magic"></i> Recalculer'
+        },
+        hi: {
+            appTitle: '<i class="fas fa-graduation-cap"></i> छात्र ए.आई (Student AI)',
+            theme: 'थीम',
+            identity: 'पहचान',
+            labelName: 'नाम',
+            labelID: 'छात्र आईडी',
+            metrics: 'प्रदर्शन मेट्रिक्स',
+            labelAttendance: 'उपस्थिति (Attendance)',
+            labelStudy: 'अध्ययन के घंटे (साप्ताहिक)',
+            labelMarks: 'आंतरिक अंक (Internal Marks)',
+            labelAssignments: 'असाइनमेंट (0-10)',
+            labelActivities: 'अतिरिक्त गतिविधियां',
+            optNo: 'कोई भागीदारी नहीं',
+            optYes: 'सक्रिय भागीदारी',
+            btnAnalyze: 'प्रदर्शन का विश्लेषण करें',
+            btnPath: 'पास होने का रास्ता खोजें',
+            btnPrint: 'रिपोर्ट डाउनलोड करें',
+            readyTitle: 'विश्लेषण के लिए तैयार',
+            readyDesc: 'बाईं ओर छात्र विवरण दर्ज करें और "विश्लेषण करें" पर क्लिक करें।',
+            analysisFor: 'का विश्लेषण',
+            chartConfTitle: 'ए.आई का विश्वास (Confidence)',
+            chartCompTitle: 'कक्षा औसत बनाम',
+            chartSkillTitle: 'व्यापक कौशल प्रोफ़ाइल',
+            historyTitle: 'हाल की भविष्यवाणियां',
+            thName: 'नाम',
+            thResult: 'परिणाम',
+            thConf: 'विश्वास',
+            thTime: 'समय',
+            pass: 'पास (Pass)',
+            fail: 'असफल (Fail)',
+            onTrack: '✅ <strong>बहुत बढ़िया!</strong><br>{name} का प्रदर्शन अच्छा है। वर्तमान अध्ययन की आदतों को बनाए रखें।',
+            pathFound: '💡 <strong>रास्ता मिल गया!</strong><br>यदि <strong>{name}</strong> अध्ययन का समय <strong>{hours} घंटे/सप्ताह</strong> (कुल: {total}h) बढ़ाता है, तो वह <strong>पास</strong> हो सकता है।',
+            hardCase: '⚠️ <strong>कठिन मामला</strong><br>केवल अध्ययन के घंटे बढ़ाना पर्याप्त नहीं है। उपस्थिति या आंतरिक अंकों में सुधार का प्रयास करें।',
+            chartLabels: ['उपस्थिति', 'अंक', 'असाइनमेंट'],
+            chartLabelsRadar: ['उपस्थिति', 'अध्ययन घंटे', 'अंक', 'असाइनमेंट'],
+            chartLabelYou: 'आप',
+            chartLabelAvg: 'औसत',
+            chartLabelProfile: 'प्रोफ़ाइल',
+            chartConf: 'विश्वास',
+            chartUncertainty: 'अनिश्चितता',
+            btnProcessing: '<i class="fas fa-spinner fa-spin"></i> प्रक्रिया में...',
+            btnCalculating: '<i class="fas fa-spinner fa-spin"></i> गणना हो रही है...',
+            btnRecalculate: '<i class="fas fa-magic"></i> पुनः गणना करें'
+        }
+    };
+
+    let currentLang = localStorage.getItem('lang') || 'en';
+    document.getElementById('langSelect').value = currentLang;
+
+    function changeLanguage(lang) {
+        currentLang = lang;
+        localStorage.setItem('lang', lang);
+        
+        // Update DOM
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (translations[lang][key]) {
+                if(el.tagName === 'INPUT' && el.hasAttribute('placeholder')) {
+                    el.placeholder = translations[lang][key];
+                } else {
+                    el.innerHTML = translations[lang][key];
+                }
+            }
+        });
+
+        // Re-render charts/results if data exists
+        if (lastData && lastResult) {
+            const isPass = lastResult.prediction === 'Pass';
+            const badge = document.getElementById('statusBadge');
+            badge.innerText = isPass ? translations[lang].pass : translations[lang].fail;
+            
+            const adviceBox = document.getElementById('adviceBox');
+            
+            // If using AI advice, we assume it comes in English for now, or we let AI translate
+            // For static logic:
+            if (!lastResult.ai_advice) {
+                if (isPass) {
+                    adviceBox.innerHTML = translations[lang].onTrack.replace('{name}', lastResult.name);
+                }
+            }
+            
+            renderCharts(lastData, lastResult);
+        }
+        
+        // Update Buttons
+        document.getElementById('predictBtn').innerHTML = '<i class="fas fa-search"></i> ' + translations[lang].btnAnalyze;
+        document.getElementById('optimizeBtn').innerHTML = '<i class="fas fa-magic"></i> ' + translations[lang].btnPath;
     }
+
+    changeLanguage(currentLang);
+
+    // --- 2. UI & Helper Functions ---
+    
+    function showToast(message, type = 'error') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        
+        // Styles based on type
+        const bgColor = type === 'success' ? '#10b981' : '#ef4444';
+        
+        toast.style.cssText = `
+            background: ${bgColor};
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            margin-bottom: 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease-out;
+            font-weight: 600;
+        `;
+        
+        toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+        
+        container.appendChild(toast);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    function updateVal(id, unit) {
+        const map = { 'attendance': 'attendance', 'study': 'study_hours', 'marks': 'internal_marks', 'assign': 'assignments' };
+        const el = document.getElementById(map[id]);
+        const val = parseFloat(el.value);
+        const display = document.getElementById(`val-${id}`);
+        
+        display.innerText = val + unit;
+        
+        // Remove old classes
+        el.classList.remove('bad-val', 'mid-val', 'good-val');
+
+        // Color Logic with specific visual colors
+        const setBadgeColor = (color) => {
+            display.style.backgroundColor = color;
+        };
+
+        if(id === 'attendance') {
+            if(val < 60) { el.classList.add('bad-val'); setBadgeColor('#ef4444'); }
+            else if(val < 85) { el.classList.add('mid-val'); setBadgeColor('#f59e0b'); }
+            else { el.classList.add('good-val'); setBadgeColor('#10b981'); }
+        }
+        else if(id === 'study') {
+            if(val < 3) { el.classList.add('bad-val'); setBadgeColor('#ef4444'); }
+            else if(val < 6) { el.classList.add('mid-val'); setBadgeColor('#f59e0b'); }
+            else { el.classList.add('good-val'); setBadgeColor('#10b981'); }
+        }
+        else if(id === 'marks') {
+            if(val < 50) { el.classList.add('bad-val'); setBadgeColor('#ef4444'); }
+            else if(val < 75) { el.classList.add('mid-val'); setBadgeColor('#f59e0b'); }
+            else { el.classList.add('good-val'); setBadgeColor('#10b981'); }
+        }
+        else if(id === 'assign') {
+            if(val < 5) { el.classList.add('bad-val'); setBadgeColor('#ef4444'); }
+            else if(val < 8) { el.classList.add('mid-val'); setBadgeColor('#f59e0b'); }
+            else { el.classList.add('good-val'); setBadgeColor('#10b981'); }
+        }
+    }
+
+    // Initialize slider colors on load
+    ['attendance', 'study', 'marks', 'assign'].forEach(id => {
+        const map = { 'attendance': '%', 'study': 'h', 'marks': '%', 'assign': '' };
+        updateVal(id, map[id]);
+    });
 
     function getFormData() {
         return {
@@ -285,111 +800,139 @@
         };
     }
 
+    // --- 3. Theme Logic ---
+    function toggleTheme() {
+        const body = document.body;
+        const current = body.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        body.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        
+        if (lastResult && lastData) renderCharts(lastData, lastResult);
+    }
+
+    if(localStorage.getItem('theme') === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+    }
+
+    // --- 4. Main Prediction Logic ---
     async function predictPerformance() {
         const btn = document.getElementById('predictBtn');
-        const emptyState = document.getElementById('emptyState');
-        const resultHeader = document.getElementById('resultHeader');
-        const chartsGrid = document.getElementById('chartsGrid');
-        
+        const t = translations[currentLang];
+
         btn.disabled = true;
-        btn.innerText = "Running AI Model...";
+        btn.innerHTML = t.btnProcessing;
 
         try {
             const data = getFormData();
+            // USE LOCAL ABSOLUTE PATH
             const response = await fetch('http://127.0.0.1:5000/predict', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
 
+            if (!response.ok) throw new Error("Backend error");
+
             const result = await response.json();
+            lastData = data;
+            lastResult = result;
 
-            // UI Updates
-            emptyState.style.display = 'none';
-            resultHeader.style.display = 'block';
-            chartsGrid.style.display = 'grid'; // Changed to grid
-            
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('resultHeader').style.display = 'block';
+            document.getElementById('chartsGrid').style.display = 'grid';
+            document.getElementById('printBtn').style.display = 'block';
+
             document.getElementById('resName').innerText = result.name;
-            
             const badge = document.getElementById('statusBadge');
-            badge.innerText = result.prediction;
-            badge.className = `status-badge ${result.prediction === 'Pass' ? 'status-pass' : 'status-fail'}`;
+            
+            const isPass = result.prediction === 'Pass';
+            badge.innerText = isPass ? t.pass : t.fail;
+            badge.className = `status-badge ${isPass ? 'status-pass' : 'status-fail'}`;
 
-            // Show/Hide "Path to Pass" button
             const optimizeBtn = document.getElementById('optimizeBtn');
             const adviceBox = document.getElementById('adviceBox');
+
+            if (!isPass) optimizeBtn.style.display = 'flex';
+            else optimizeBtn.style.display = 'none';
+
+            adviceBox.style.display = 'block';
             
-            if (result.prediction === 'Fail') {
-                optimizeBtn.style.display = 'block';
-                adviceBox.style.display = 'none';
+            // Prioritize AI Advice
+            if (result.ai_advice) {
+                adviceBox.innerHTML = `<span class="ai-badge">AI SUGGESTION</span> ${result.ai_advice}`;
             } else {
-                optimizeBtn.style.display = 'none';
-                adviceBox.style.display = 'block';
-                adviceBox.innerText = `Excellent work! ${result.name} is on track to pass. Maintain this performance.`;
+                 if (isPass) adviceBox.innerHTML = t.onTrack.replace('{name}', result.name);
+                 else adviceBox.innerHTML = t.hardCase;
             }
 
-            // Render All Charts
             renderCharts(data, result);
+            addToHistory(result);
+            
+            if(isPass) showToast(`Prediction Complete: Pass`, "success");
+            else showToast(`Prediction Complete: Fail`, "error");
 
-        } catch (e) {
-            alert("Error: " + e);
+        } catch (error) {
+            showToast("Could not connect to server.", "error");
+            console.error(error);
         } finally {
             btn.disabled = false;
-            btn.innerText = "Analyze Performance";
+            btn.innerHTML = '<i class="fas fa-search"></i> ' + t.btnAnalyze;
         }
     }
 
-    function renderCharts(inputData, result) {
-        const probRaw = result.raw_probability; // 0.0 to 1.0
+    // --- 5. Chart Logic ---
+    function renderCharts(data, result) {
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        const textColor = isDark ? '#f1f5f9' : '#1e293b';
+        const gridColor = isDark ? '#334155' : '#e2e8f0';
+        const t = translations[currentLang];
+        
+        const prob = result.raw_probability;
         const isPass = result.prediction === 'Pass';
-        
-        // 1. PROBABILITY CHART (Doughnut)
-        const ctxProb = document.getElementById('probChart').getContext('2d');
-        if (probChartInstance) probChartInstance.destroy();
-        
-        document.getElementById('confText').innerText = `Confidence: ${(probRaw * 100).toFixed(1)}%`;
+        const mainColor = isPass ? '#10b981' : '#ef4444';
 
-        probChartInstance = new Chart(ctxProb, {
+        Chart.defaults.color = textColor;
+        Chart.defaults.borderColor = gridColor;
+
+        // 1. Probability Doughnut
+        const ctxProb = document.getElementById('probChart').getContext('2d');
+        if (charts.prob) charts.prob.destroy();
+        
+        document.getElementById('confText').innerText = (prob * 100).toFixed(1) + '%';
+        
+        charts.prob = new Chart(ctxProb, {
             type: 'doughnut',
             data: {
-                labels: ['Pass Probability', 'Fail Risk'],
+                labels: [t.chartConf, t.chartUncertainty],
                 datasets: [{
-                    data: [probRaw * 100, (1 - probRaw) * 100],
-                    backgroundColor: ['#10b981', '#e2e8f0'],
-                    borderWidth: 0,
-                    hoverOffset: 4
+                    data: [prob * 100, (1 - prob) * 100],
+                    backgroundColor: [mainColor, isDark ? '#1e293b' : '#e2e8f0'],
+                    borderWidth: 0
                 }]
             },
-            options: { cutout: '70%', plugins: { legend: { display: false } } }
+            options: { cutout: '75%', plugins: { legend: { display: false } } }
         });
 
-        // 2. BAR CHART (Comparison)
-        // Hardcoded "Average Student" stats for comparison
-        const avgStudent = { attendance: 75, marks: 65, assignments: 70 }; // Normalized
-        const userStats = {
-            attendance: inputData.attendance,
-            marks: inputData.internal_marks,
-            assignments: (inputData.assignments / 10) * 100
-        };
-
+        // 2. Bar Chart
         const ctxBar = document.getElementById('barChart').getContext('2d');
-        if (barChartInstance) barChartInstance.destroy();
+        if (charts.bar) charts.bar.destroy();
 
-        barChartInstance = new Chart(ctxBar, {
+        charts.bar = new Chart(ctxBar, {
             type: 'bar',
             data: {
-                labels: ['Attendance', 'Internal Marks', 'Assignments'],
+                labels: t.chartLabels,
                 datasets: [
                     {
-                        label: 'You',
-                        data: [userStats.attendance, userStats.marks, userStats.assignments],
+                        label: t.chartLabelYou,
+                        data: [data.attendance, data.internal_marks, data.assignments * 10],
                         backgroundColor: '#6366f1',
                         borderRadius: 5
                     },
                     {
-                        label: 'Class Average',
-                        data: [avgStudent.attendance, avgStudent.marks, avgStudent.assignments],
-                        backgroundColor: '#94a3b8',
+                        label: t.chartLabelAvg,
+                        data: [75, 65, 70],
+                        backgroundColor: isDark ? '#475569' : '#cbd5e1',
                         borderRadius: 5
                     }
                 ]
@@ -400,25 +943,25 @@
             }
         });
 
-        // 3. RADAR CHART (Existing)
+        // 3. Radar Chart
         const ctxRadar = document.getElementById('radarChart').getContext('2d');
-        if (radarChartInstance) radarChartInstance.destroy();
+        if (charts.radar) charts.radar.destroy();
 
-        radarChartInstance = new Chart(ctxRadar, {
+        charts.radar = new Chart(ctxRadar, {
             type: 'radar',
             data: {
-                labels: ['Attendance', 'Study Hours', 'Marks', 'Assignments'],
+                labels: t.chartLabelsRadar,
                 datasets: [{
-                    label: 'Student Profile',
+                    label: t.chartLabelProfile,
                     data: [
-                        inputData.attendance,
-                        (inputData.study_hours / 20) * 100,
-                        inputData.internal_marks,
-                        (inputData.assignments / 10) * 100
+                        data.attendance,
+                        (data.study_hours / 20) * 100,
+                        data.internal_marks,
+                        (data.assignments / 10) * 100
                     ],
                     backgroundColor: isPass ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                    borderColor: isPass ? '#10b981' : '#ef4444',
-                    pointBackgroundColor: isPass ? '#10b981' : '#ef4444',
+                    borderColor: mainColor,
+                    pointBackgroundColor: mainColor,
                     borderWidth: 2
                 }]
             },
@@ -429,43 +972,108 @@
         });
     }
 
+    // --- 6. Optimization Logic ---
     async function optimizePath() {
         const btn = document.getElementById('optimizeBtn');
         const adviceBox = document.getElementById('adviceBox');
-        let data = getFormData();
+        const t = translations[currentLang];
         
         btn.disabled = true;
-        btn.innerText = "Calculating...";
+        btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t.btnCalculating}`;
 
+        let currentData = getFormData();
         let foundPath = false;
-        let originalHours = data.study_hours;
+        let originalHours = currentData.study_hours;
+
+        showToast("Calculating pass strategy...", "success");
 
         for (let i = 1; i <= 10; i++) {
-            data.study_hours = originalHours + i;
-            if (data.study_hours > 20) break; 
+            // Show Progress
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Checking +${i} hours...`;
+            
+            currentData.study_hours = originalHours + i;
+            if (currentData.study_hours > 20) break;
 
-            const response = await fetch('http://127.0.0.1:5000/predict', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            const result = await response.json();
+            try {
+                // USE LOCAL ABSOLUTE PATH
+                const response = await fetch('http://127.0.0.1:5000/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(currentData)
+                });
+                const result = await response.json();
 
-            if (result.prediction === "Pass") {
-                adviceBox.style.display = "block";
-                adviceBox.innerHTML = `<strong>💡 Path to Success:</strong><br>Increase study time by <strong>${i} hours/week</strong> (Total: ${data.study_hours}h) to reach passing probability.`;
-                foundPath = true;
-                break;
-            }
+                if (result.prediction === "Pass") {
+                    foundPath = true;
+                    adviceBox.style.display = "block";
+                    adviceBox.innerHTML = t.pathFound
+                        .replace('{name}', result.name)
+                        .replace('{hours}', i)
+                        .replace('{total}', currentData.study_hours);
+                    
+                    showToast("Optimization Path Found!", "success");
+                    break;
+                }
+            } catch (e) { console.error(e); }
         }
 
         if (!foundPath) {
             adviceBox.style.display = "block";
-            adviceBox.innerHTML = `<strong>⚠️ Study hours alone aren't enough.</strong> Try improving Attendance or Internal Marks.`;
+            adviceBox.innerHTML = t.hardCase;
+            showToast("No simple path found by study hours alone.", "error");
         }
+
         btn.disabled = false;
-        btn.innerText = "✨ Calculate Path to Pass";
+        btn.innerHTML = t.btnRecalculate;
     }
+
+    // --- 7. History Logic ---
+    function addToHistory(result) {
+        let history = JSON.parse(localStorage.getItem('predHistory') || '[]');
+        history.unshift({
+            name: result.name,
+            pred: result.prediction,
+            conf: result.confidence,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+
+        if (history.length > 5) history.pop();
+        localStorage.setItem('predHistory', JSON.stringify(history));
+        loadHistory();
+    }
+
+    function loadHistory() {
+        const history = JSON.parse(localStorage.getItem('predHistory') || '[]');
+        const tbody = document.querySelector('#historyTable tbody');
+        const panel = document.getElementById('historyPanel');
+        const t = translations[currentLang];
+        
+        if(history.length === 0) { panel.style.display = 'none'; return; }
+        
+        panel.style.display = 'block';
+        tbody.innerHTML = history.map(h => {
+            const isPass = h.pred === 'Pass';
+            const displayPred = isPass ? t.pass : t.fail;
+            return `
+            <tr>
+                <td style="font-weight:500">${h.name}</td>
+                <td>
+                    <span style="
+                        color:${isPass ? 'var(--success)' : 'var(--danger)'}; 
+                        font-weight:bold;
+                        background: ${isPass ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)'};
+                        padding: 2px 8px;
+                        border-radius: 4px;
+                    ">
+                        ${displayPred}
+                    </span>
+                </td>
+                <td>${h.conf}</td>
+                <td style="opacity:0.7; font-size:0.9rem;">${h.time}</td>
+            </tr>
+        `}).join('');
+    }
+    loadHistory();
 </script>
 
 </body>

@@ -37,8 +37,7 @@ Student Performance Predictor is a machine learning web application that predict
 
 ### File Storage
 - **pickle** - Model serialization
-- **CSV** -Trained Data storage
-- **google sheets** - Data storage
+- **CSV** - Data storage
 
 ## 📦 Project Structure
 
