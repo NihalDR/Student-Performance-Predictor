@@ -1,5 +1,5 @@
 # Student Performance Predictor
-
+Demo link:https://drive.google.com/file/d/12YHZrfOwzv4MNSU0ZQNOCH7k0IJeMPv1/view?usp=sharing 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)]() [![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)]()
 
 Project to predict student performance using machine learning models. This repository contains preprocessing, model training, evaluation scripts, and example notebooks to reproduce results.
