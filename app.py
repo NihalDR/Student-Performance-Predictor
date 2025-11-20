@@ -3,6 +3,8 @@ from flask_cors import CORS
 import pickle
 import numpy as np
 import os
+import csv
+from datetime import datetime
 import google.generativeai as genai
 import train_model_improved
 
@@ -15,6 +17,7 @@ GEMINI_API_KEY = "AIzaSyA1Tc9odl_5k8wyn-3Q2TnoLswp2ycfh5k"
 # Paths to artifacts
 MODEL_PATH = 'model.pkl'
 SCALER_PATH = 'scaler.pkl'
+HISTORY_PATH = 'student_history.csv'  # New: Path for the history sheet
 
 model = None
 scaler = None
@@ -63,9 +66,54 @@ def generate_smart_advice(data, prediction):
         print(f"AI Advice Error: {e}")
         return None
 
+def log_to_history(data, prediction, confidence, advice):
+    """
+    Appends the prediction result to a CSV sheet (maintains history).
+    """
+    file_exists = os.path.isfile(HISTORY_PATH)
+    
+    try:
+        # Open file in append mode
+        with open(HISTORY_PATH, mode='a', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            
+            # Write header if file doesn't exist yet
+            if not file_exists:
+                writer.writerow([
+                    'Timestamp', 'Student Name', 'Student ID', 
+                    'Attendance (%)', 'Study Hours', 'Internal Marks', 
+                    'Assignments', 'Activities', 'Prediction', 
+                    'Confidence (%)', 'AI Advice'
+                ])
+            
+            # Write the student data
+            writer.writerow([
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                data.get('name'),
+                data.get('student_id'),
+                data.get('attendance'),
+                data.get('study_hours'),
+                data.get('internal_marks'),
+                data.get('assignments'),
+                data.get('activities'),
+                prediction,
+                f"{confidence:.2f}",
+                advice if advice else "N/A"
+            ])
+    except Exception as e:
+        print(f"Error saving history: {e}")
+
 @app.route('/')
 def home():
     return send_from_directory('.', 'index.html')
+
+@app.route('/download_history')
+def download_history():
+    """Endpoint to download the CSV sheet"""
+    if os.path.exists(HISTORY_PATH):
+        return send_from_directory('.', HISTORY_PATH, as_attachment=True)
+    else:
+        return jsonify({'error': 'No history available yet'}), 404
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -99,6 +147,9 @@ def predict():
 
         # 4. AI Advice Generation
         ai_suggestion = generate_smart_advice(data, result_text)
+        
+        # 5. Log to History Sheet (Server-side)
+        log_to_history(data, result_text, conf_score, ai_suggestion)
 
         return jsonify({
             'name': name,

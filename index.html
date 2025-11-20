@@ -250,6 +250,7 @@
             border: 1px solid var(--border);
             margin-top: 0 !important; /* Override default button margin */
             font-size: 0.9rem;
+            cursor: pointer;
         }
         .secondary-btn:hover { background: var(--bg); }
 
@@ -552,9 +553,15 @@
 
         <!-- History Table -->
         <div class="history-panel animate-entry" id="historyPanel">
-            <h3 style="margin:0 0 1rem 0; display:flex; align-items:center; gap:10px;">
-                <i class="fas fa-history"></i> <span data-i18n="historyTitle">Recent Predictions</span>
-            </h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h3 style="margin:0; display:flex; align-items:center; gap:10px;">
+                    <i class="fas fa-history"></i> <span data-i18n="historyTitle">Recent Predictions</span>
+                </h3>
+                <button onclick="downloadHistorySheet()" class="secondary-btn" style="width:auto; padding:0.5rem 1rem; margin:0;">
+                    <i class="fas fa-file-csv"></i> Download Sheet
+                </button>
+            </div>
+            
             <div class="table-wrapper">
                 <table id="historyTable">
                     <thead>
@@ -840,6 +847,11 @@
             toast.style.opacity = '0';
             setTimeout(() => toast.remove(), 300);
         }, 3000);
+    }
+    
+    function downloadHistorySheet() {
+        // Direct user to the new download endpoint
+        window.location.href = 'http://127.0.0.1:5000/download_history';
     }
 
     // Updated Sync Inputs function for Two-Way Binding
