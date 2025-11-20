@@ -7,7 +7,6 @@
     
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Confetti Library for Celebration -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -196,7 +195,7 @@
             -webkit-appearance: none;
             width: 18px;
             height: 18px;
-            background: var(--primary); /* Default fallback */
+            background: var(--primary);
             border-radius: 50%;
             cursor: pointer;
             transition: transform 0.1s;
@@ -209,7 +208,6 @@
         input[type="range"].mid-val { accent-color: #f59e0b; }
         input[type="range"].good-val { accent-color: #10b981; }
         
-        /* Explicit fallback */
         input[type="range"].bad-val::-webkit-slider-thumb { background: #ef4444; }
         input[type="range"].mid-val::-webkit-slider-thumb { background: #f59e0b; }
         input[type="range"].good-val::-webkit-slider-thumb { background: #10b981; }
@@ -248,11 +246,24 @@
             background: transparent;
             color: var(--text);
             border: 1px solid var(--border);
-            margin-top: 0 !important; /* Override default button margin */
+            margin-top: 0 !important;
             font-size: 0.9rem;
             cursor: pointer;
         }
         .secondary-btn:hover { background: var(--bg); }
+        
+        /* Clear History Button (Small icon style) */
+        .clear-btn {
+            background: transparent;
+            color: var(--danger);
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            opacity: 0.6;
+            font-size: 0.9rem;
+            margin-left: 10px;
+        }
+        .clear-btn:hover { opacity: 1; background: rgba(239,68,68,0.1); border-radius: 4px;}
 
         #printBtn { 
             background: var(--card-bg); 
@@ -273,7 +284,7 @@
             border-radius: 16px;
             box-shadow: var(--shadow);
             text-align: center;
-            display: none; /* Hidden by default */
+            display: none;
             border: 1px solid var(--border);
             overflow: hidden;
         }
@@ -319,7 +330,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1.5rem;
-            display: none; /* Hidden by default */
+            display: none;
         }
 
         .chart-card {
@@ -345,7 +356,7 @@
             border-radius: 16px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow);
-            display: none; /* Hidden if empty */
+            display: none;
         }
         
         .table-wrapper {
@@ -379,7 +390,7 @@
 
         /* --- Print Styles --- */
         @media print {
-            .input-panel, .theme-toggle, .lang-select, #printBtn, #optimizeBtn, .secondary-btn-group, .history-panel, #toast-container { display: none !important; }
+            .input-panel, .theme-toggle, .lang-select, #printBtn, #optimizeBtn, .secondary-btn-group, .history-panel, #toast-container, .clear-btn { display: none !important; }
             .main-wrapper { display: block; max-width: 100%; }
             body { background: white; color: black; padding: 0; }
             .chart-card, .result-header { 
@@ -483,7 +494,7 @@
             </select>
         </div>
 
-        <button onclick="predictPerformance()" id="predictBtn">
+        <button onclick="predictPerformance()" id="predictBtn" title="Press Enter to Analyze">
             <i class="fas fa-search"></i> <span data-i18n="btnAnalyze">Analyze Performance</span>
         </button>
         
@@ -553,9 +564,10 @@
 
         <!-- History Table -->
         <div class="history-panel animate-entry" id="historyPanel">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
                 <h3 style="margin:0; display:flex; align-items:center; gap:10px;">
                     <i class="fas fa-history"></i> <span data-i18n="historyTitle">Recent Predictions</span>
+                    <button onclick="clearLocalHistory()" class="clear-btn" title="Clear Local History"><i class="fas fa-trash-alt"></i></button>
                 </h3>
                 <button onclick="downloadHistorySheet()" class="secondary-btn" style="width:auto; padding:0.5rem 1rem; margin:0;">
                     <i class="fas fa-file-csv"></i> Download Sheet
@@ -790,21 +802,7 @@
 
         // Re-render charts/results if data exists
         if (lastData && lastResult) {
-            const isPass = lastResult.prediction === 'Pass';
-            const badge = document.getElementById('statusBadge');
-            badge.innerText = isPass ? translations[lang].pass : translations[lang].fail;
-            
-            const adviceBox = document.getElementById('adviceBox');
-            
-            // If using AI advice, we assume it comes in English for now, or we let AI translate
-            // For static logic:
-            if (!lastResult.ai_advice) {
-                if (isPass) {
-                    adviceBox.innerHTML = translations[lang].onTrack.replace('{name}', lastResult.name);
-                }
-            }
-            
-            renderCharts(lastData, lastResult);
+            renderResult(lastData, lastResult);
         }
         
         // Update Buttons
@@ -850,11 +848,10 @@
     }
     
     function downloadHistorySheet() {
-        // Direct user to the new download endpoint
         window.location.href = 'http://127.0.0.1:5000/download_history';
     }
 
-    // Updated Sync Inputs function for Two-Way Binding
+    // Updated Sync Inputs function with Auto-Save
     function syncInputs(id, fromNum = false) {
         const slider = document.getElementById(id);
         const numberInput = document.getElementById(id + '_num');
@@ -862,8 +859,9 @@
         if (fromNum) {
             // Ensure value is within bounds
             let val = parseFloat(numberInput.value);
-            if(val > parseFloat(numberInput.max)) val = parseFloat(numberInput.max);
-            if(val < parseFloat(numberInput.min)) val = parseFloat(numberInput.min);
+            if (isNaN(val)) val = parseFloat(slider.min); // Fallback if empty/NaN
+            if (val > parseFloat(numberInput.max)) val = parseFloat(numberInput.max);
+            if (val < parseFloat(numberInput.min)) val = parseFloat(numberInput.min);
             
             numberInput.value = val;
             slider.value = val;
@@ -875,30 +873,79 @@
         const val = parseFloat(slider.value);
         slider.classList.remove('bad-val', 'mid-val', 'good-val');
 
-        if(id === 'attendance') {
-            if(val < 60) slider.classList.add('bad-val');
-            else if(val < 85) slider.classList.add('mid-val');
+        // Threshold logic (reused for all inputs with distinct ranges)
+        // Attendance & Marks (0-100)
+        if(id === 'attendance' || id === 'internal_marks') {
+            if(val < 50) slider.classList.add('bad-val');
+            else if(val < 75) slider.classList.add('mid-val');
             else slider.classList.add('good-val');
         }
+        // Study Hours (0-20)
         else if(id === 'study_hours') {
             if(val < 3) slider.classList.add('bad-val');
             else if(val < 6) slider.classList.add('mid-val');
             else slider.classList.add('good-val');
         }
-        else if(id === 'internal_marks') {
-            if(val < 50) slider.classList.add('bad-val');
-            else if(val < 75) slider.classList.add('mid-val');
-            else slider.classList.add('good-val');
-        }
+        // Assignments (0-10)
         else if(id === 'assignments') {
             if(val < 5) slider.classList.add('bad-val');
             else if(val < 8) slider.classList.add('mid-val');
             else slider.classList.add('good-val');
         }
+        
+        // Auto-Save State
+        saveFormState();
     }
 
-    // Initialize colors on load
-    ['attendance', 'study_hours', 'internal_marks', 'assignments'].forEach(id => syncInputs(id));
+    // --- 2.5 Persistence & Accessibility ---
+    
+    function saveFormState() {
+        const state = getFormData();
+        localStorage.setItem('formState', JSON.stringify(state));
+    }
+
+    function loadFormState() {
+        const state = JSON.parse(localStorage.getItem('formState'));
+        if(!state) return;
+        
+        document.getElementById('student_name').value = state.name || '';
+        document.getElementById('student_id').value = state.student_id || '';
+        document.getElementById('attendance').value = state.attendance || 75;
+        document.getElementById('study_hours').value = state.study_hours || 5;
+        document.getElementById('internal_marks').value = state.internal_marks || 60;
+        document.getElementById('assignments').value = state.assignments || 8;
+        document.getElementById('activities').value = state.activities || "0";
+        
+        ['attendance', 'study_hours', 'internal_marks', 'assignments'].forEach(id => syncInputs(id));
+    }
+
+    function clearLocalHistory() {
+        if(confirm("Clear local history table? This does not affect the server sheet.")) {
+            localStorage.removeItem('predHistory');
+            loadHistory();
+            showToast("Local history cleared", "success");
+        }
+    }
+
+    // Initialize listeners
+    document.addEventListener('DOMContentLoaded', () => {
+        loadFormState(); // Restore state on load
+        
+        // Enter Key Support
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                // Prevent firing if user is typing in an input field that isn't the submit button
+                // But generally good to trigger Analysis
+                predictPerformance();
+            }
+        });
+        
+        // Input Listeners for text fields to auto-save
+        ['student_name', 'student_id'].forEach(id => {
+            document.getElementById(id).addEventListener('input', saveFormState);
+        });
+        document.getElementById('activities').addEventListener('change', saveFormState);
+    });
 
     function getFormData() {
         return {
@@ -932,6 +979,8 @@
     }
     
     function resetForm() {
+        localStorage.removeItem('formState'); // Clear saved state
+        
         document.getElementById('student_name').value = '';
         document.getElementById('student_id').value = '';
         
@@ -1006,38 +1055,10 @@
             lastData = data;
             lastResult = result;
 
-            document.getElementById('emptyState').style.display = 'none';
-            document.getElementById('resultHeader').style.display = 'block';
-            document.getElementById('chartsGrid').style.display = 'grid';
-            document.getElementById('printBtn').style.display = 'block';
-
-            document.getElementById('resName').innerText = result.name;
-            const badge = document.getElementById('statusBadge');
-            
-            const isPass = result.prediction === 'Pass';
-            badge.innerText = isPass ? t.pass : t.fail;
-            badge.className = `status-badge ${isPass ? 'status-pass' : 'status-fail'}`;
-
-            const optimizeBtn = document.getElementById('optimizeBtn');
-            const adviceBox = document.getElementById('adviceBox');
-
-            if (!isPass) optimizeBtn.style.display = 'flex';
-            else optimizeBtn.style.display = 'none';
-
-            adviceBox.style.display = 'block';
-            
-            // Prioritize AI Advice
-            if (result.ai_advice) {
-                adviceBox.innerHTML = `<span class="ai-badge">AI SUGGESTION</span> ${result.ai_advice}`;
-            } else {
-                 if (isPass) adviceBox.innerHTML = t.onTrack.replace('{name}', result.name);
-                 else adviceBox.innerHTML = t.hardCase;
-            }
-
-            renderCharts(data, result);
+            renderResult(data, result);
             addToHistory(result);
             
-            if(isPass) {
+            if(result.prediction === 'Pass') {
                 showToast(`Prediction Complete: Pass`, "success");
                 // CONFETTI CELEBRATION
                 confetti({
@@ -1056,6 +1077,40 @@
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-search"></i> ' + t.btnAnalyze;
         }
+    }
+
+    function renderResult(data, result) {
+        const t = translations[currentLang];
+        const isPass = result.prediction === 'Pass';
+
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('resultHeader').style.display = 'block';
+        document.getElementById('chartsGrid').style.display = 'grid';
+        document.getElementById('printBtn').style.display = 'block';
+
+        document.getElementById('resName').innerText = result.name;
+        const badge = document.getElementById('statusBadge');
+        
+        badge.innerText = isPass ? t.pass : t.fail;
+        badge.className = `status-badge ${isPass ? 'status-pass' : 'status-fail'}`;
+
+        const optimizeBtn = document.getElementById('optimizeBtn');
+        const adviceBox = document.getElementById('adviceBox');
+
+        if (!isPass) optimizeBtn.style.display = 'flex';
+        else optimizeBtn.style.display = 'none';
+
+        adviceBox.style.display = 'block';
+        
+        // Prioritize AI Advice
+        if (result.ai_advice) {
+            adviceBox.innerHTML = `<span class="ai-badge">AI SUGGESTION</span> ${result.ai_advice}`;
+        } else {
+                if (isPass) adviceBox.innerHTML = t.onTrack.replace('{name}', result.name);
+                else adviceBox.innerHTML = t.hardCase;
+        }
+
+        renderCharts(data, result);
     }
 
     // --- 5. Chart Logic ---
