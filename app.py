@@ -1,24 +1,16 @@
-import os
-import pickle
-import numpy as np
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+import pickle
+import numpy as np
+import os
 import google.generativeai as genai
-
-# --- IMPORT TRAINING MODULE ---
-# Ensure 'train_model_improved.py' is in your GitHub repository.
-try:
-    import train_model_improved
-except ImportError:
-    print("WARNING: 'train_model_improved.py' not found. If model.pkl is missing, the app will crash.")
-    train_model_improved = None
+import train_model_improved
 
 app = Flask(__name__)
 CORS(app)
 
 # --- CONFIGURATION ---
-# UPDATED: Securely load API Key from Render Environment Variables
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+GEMINI_API_KEY = "AIzaSyA1Tc9odl_5k8wyn-3Q2TnoLswp2ycfh5k"
 
 # Paths to artifacts
 MODEL_PATH = 'model.pkl'
@@ -29,7 +21,6 @@ scaler = None
 
 def load_artifacts():
     global model, scaler
-    # Check if model files exist
     if os.path.exists(MODEL_PATH) and os.path.exists(SCALER_PATH):
         print("Loading existing model and scaler...")
         with open(MODEL_PATH, 'rb') as f:
@@ -37,33 +28,24 @@ def load_artifacts():
         with open(SCALER_PATH, 'rb') as f:
             scaler = pickle.load(f)
     else:
-        # If files are missing, try to retrain
-        print("Artifacts missing. Attempting to train new model...")
-        if train_model_improved:
-            model, scaler = train_model_improved.train_and_save_model(MODEL_PATH, SCALER_PATH)
-        else:
-            # Fallback if training script is missing
-            print("CRITICAL ERROR: Model files missing and 'train_model_improved.py' not found.")
-            model, scaler = None, None
+        print("Artifacts missing. Training new model...")
+        model, scaler = train_model_improved.train_and_save_model(MODEL_PATH, SCALER_PATH)
 
-# Load model on startup
 load_artifacts()
 
 def generate_smart_advice(data, prediction):
     """
     Uses Google Gemini to generate personalized study advice.
     """
-    # If no API key is set in Render, skip AI features gracefully
     if not GEMINI_API_KEY:
-        print("Gemini API Key missing. Skipping AI advice.")
-        return "AI advice unavailable (API Key missing)."
+        return None
 
     try:
         genai.configure(api_key=GEMINI_API_KEY)
         ai_model = genai.GenerativeModel('gemini-pro')
         
         prompt = f"""
-        Act as a supportive academic counselor. A student named {data.get('name', 'Student')} has these stats:
+        Act as a supportive academic counselor. A student named {data.get('name')} has these stats:
         - Attendance: {data.get('attendance')}%
         - Internal Marks: {data.get('internal_marks')}%
         - Study Hours: {data.get('study_hours')}/week
@@ -79,18 +61,14 @@ def generate_smart_advice(data, prediction):
         return response.text
     except Exception as e:
         print(f"AI Advice Error: {e}")
-        return "Could not generate advice at this time."
+        return None
 
 @app.route('/')
 def home():
-    # Serves index.html from the current directory
     return send_from_directory('.', 'index.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    if not model or not scaler:
-        return jsonify({'error': 'Model not loaded. Server configuration error.'}), 500
-
     try:
         data = request.json
         
@@ -135,6 +113,4 @@ def predict():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    # Use PORT environment variable if available (Render sets this)
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(debug=True)
