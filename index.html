@@ -8,7 +8,7 @@
     <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         /* --- CSS Variables for Theme --- */
@@ -78,18 +78,19 @@
             background: var(--card-bg);
             border: 1px solid var(--border);
             color: var(--text);
-            padding: 0.3rem 0.8rem;
-            border-radius: 15px;
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             display: flex;
             align-items: center;
-            gap: 0.4rem;
+            gap: 0.5rem;
             transition: all 0.2s;
             outline: none;
         }
         .theme-toggle:hover, .lang-select:hover { 
             border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
         }
 
         /* --- Main Layout --- */
@@ -120,10 +121,11 @@
             margin: 1.5rem 0 1rem 0;
             border-bottom: 1px solid var(--border);
             padding-bottom: 0.5rem;
+            font-weight: 700;
         }
 
         .form-group { margin-bottom: 1.2rem; }
-        label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.9rem; }
+        label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.95rem; }
 
         /* Tooltip Icon */
         .info-icon {
@@ -131,14 +133,14 @@
             opacity: 0.6;
             cursor: help;
             margin-left: 5px;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
         }
         .info-icon:hover { opacity: 1; }
 
         /* Input Styling */
         input[type="text"], select {
             width: 100%;
-            padding: 0.7rem;
+            padding: 0.8rem;
             background: var(--input-bg);
             color: var(--text);
             border: 1px solid var(--border);
@@ -148,6 +150,12 @@
             transition: border-color 0.2s;
         }
         
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
         /* Validation Error State */
         .input-error {
             border-color: var(--danger) !important;
@@ -165,19 +173,20 @@
         .slider-container {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
         
         /* Number Input for Synced Sliders */
         .number-input {
-            width: 70px;
-            padding: 0.3rem;
+            width: 75px;
+            padding: 0.4rem;
             text-align: center;
             border-radius: 6px;
             border: 1px solid var(--border);
             background: var(--input-bg);
             color: var(--text);
             font-weight: bold;
+            font-size: 0.95rem;
         }
 
         /* Range Slider Styling */
@@ -190,6 +199,7 @@
             -webkit-appearance: none;
             margin-top: 0;
             transition: accent-color 0.3s ease;
+            cursor: pointer;
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -199,7 +209,7 @@
             border-radius: 50%;
             cursor: pointer;
             transition: transform 0.1s;
-            box-shadow: 0 0 0 2px white, 0 2px 4px rgba(0,0,0,0.2);
+            box-shadow: 0 0 0 2px var(--card-bg), 0 2px 4px rgba(0,0,0,0.2);
         }
         input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 
@@ -215,8 +225,8 @@
         /* Buttons */
         button {
             width: 100%;
-            padding: 0.9rem;
-            border-radius: 8px;
+            padding: 1rem;
+            border-radius: 10px;
             border: none;
             font-weight: bold;
             cursor: pointer;
@@ -226,20 +236,20 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.5rem;
+            gap: 0.6rem;
         }
 
-        #predictBtn { background: var(--primary); color: white; }
-        #predictBtn:hover { filter: brightness(110%); transform: translateY(-1px); }
-        #predictBtn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
+        #predictBtn { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3); }
+        #predictBtn:hover { filter: brightness(110%); transform: translateY(-2px); box-shadow: 0 6px 8px -1px rgba(99, 102, 241, 0.4); }
+        #predictBtn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
         
-        #optimizeBtn { background: var(--success); color: white; display: none; }
-        #optimizeBtn:hover { filter: brightness(95%); }
+        #optimizeBtn { background: var(--success); color: white; display: none; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.3); }
+        #optimizeBtn:hover { filter: brightness(95%); transform: translateY(-2px); }
 
         .secondary-btn-group {
             display: flex;
             gap: 10px;
-            margin-top: 0.5rem;
+            margin-top: 0.8rem;
         }
         
         .secondary-btn {
@@ -249,8 +259,9 @@
             margin-top: 0 !important;
             font-size: 0.9rem;
             cursor: pointer;
+            padding: 0.6rem;
         }
-        .secondary-btn:hover { background: var(--bg); }
+        .secondary-btn:hover { background: var(--bg); border-color: var(--primary); }
         
         /* Clear History Button (Small icon style) */
         .clear-btn {
@@ -262,6 +273,8 @@
             opacity: 0.6;
             font-size: 0.9rem;
             margin-left: 10px;
+            width: auto;
+            display: inline-flex;
         }
         .clear-btn:hover { opacity: 1; background: rgba(239,68,68,0.1); border-radius: 4px;}
 
@@ -272,7 +285,7 @@
             margin-top: 1rem;
             display: none;
         }
-        #printBtn:hover { background: var(--bg); }
+        #printBtn:hover { background: var(--bg); border-color: var(--primary); }
 
         /* --- Dashboard (Right) --- */
         .dashboard-container { display: flex; flex-direction: column; gap: 1.5rem; }
@@ -290,18 +303,18 @@
         }
         
         .result-banner {
-            padding: 1.5rem;
+            padding: 2rem;
             background: linear-gradient(to right, var(--bg), var(--card-bg));
             border-bottom: 1px solid var(--border);
         }
 
         .status-badge {
             display: inline-block;
-            padding: 0.5rem 3rem;
+            padding: 0.75rem 3rem;
             border-radius: 50px;
             font-size: 2.5rem;
             font-weight: 800;
-            margin: 1rem 0;
+            margin: 1.5rem 0 0.5rem 0;
             letter-spacing: 1px;
         }
         .status-pass { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
@@ -344,9 +357,19 @@
             align-items: center;
             justify-content: center;
             min-height: 300px;
+            position: relative;
         }
         
-        .chart-card h4 { margin: 0 0 1rem 0; color: var(--text); opacity: 0.8; }
+        .chart-card h4 { margin: 0 0 1.5rem 0; color: var(--text); opacity: 0.8; width: 100%; text-align: left; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+        
+        .chart-container-flex {
+            width: 100%;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
 
         /* --- History Table --- */
         .history-panel {
@@ -365,18 +388,18 @@
         }
 
         table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th { text-align: left; padding: 1rem; color: var(--primary); border-bottom: 2px solid var(--border); white-space: nowrap;}
+        th { text-align: left; padding: 1rem; color: var(--primary); border-bottom: 2px solid var(--border); white-space: nowrap; font-size: 0.9rem; text-transform: uppercase;}
         td { padding: 1rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
         tr:last-child td { border-bottom: none; }
 
         /* --- Empty State --- */
         .empty-state {
             text-align: center;
-            padding: 4rem 2rem;
+            padding: 5rem 2rem;
             color: var(--text);
             opacity: 0.6;
         }
-        .empty-state i { font-size: 3rem; margin-bottom: 1rem; }
+        .empty-state i { font-size: 4rem; margin-bottom: 1.5rem; color: var(--primary); opacity: 0.5;}
 
         /* --- Toast Notification --- */
         @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
@@ -529,7 +552,7 @@
         <!-- Result Header -->
         <div class="result-header animate-entry" id="resultHeader">
             <div class="result-banner">
-                <h2 style="margin:0; opacity:0.8;"><span data-i18n="analysisFor">Analysis for</span> <span id="resName" style="color:var(--primary)">---</span></h2>
+                <h2 style="margin:0; opacity:0.8; font-size: 1.2rem;"><span data-i18n="analysisFor">Analysis for</span> <span id="resName" style="color:var(--primary)">---</span></h2>
                 <div id="statusBadge" class="status-badge">---</div>
             </div>
             <div id="adviceBox" class="advice-box"></div>
@@ -541,22 +564,24 @@
             <!-- Chart 1: Probability -->
             <div class="chart-card">
                 <h4 data-i18n="chartConfTitle">AI Confidence</h4>
-                <div style="height:180px; width:180px;">
+                <div class="chart-container-flex" style="height: 200px;">
                     <canvas id="probChart"></canvas>
                 </div>
-                <p id="confText" style="font-weight:bold; font-size:1.2rem; margin-top:1rem;">--</p>
+                <p id="confText" style="font-weight:bold; font-size:1.5rem; margin-top:1rem;">--</p>
             </div>
 
             <!-- Chart 2: Comparison -->
             <div class="chart-card">
                 <h4 data-i18n="chartCompTitle">Vs. Class Average</h4>
-                <canvas id="barChart"></canvas>
+                <div class="chart-container-flex">
+                    <canvas id="barChart"></canvas>
+                </div>
             </div>
 
             <!-- Chart 3: Skills -->
             <div class="chart-card" style="grid-column: 1 / -1;">
                 <h4 data-i18n="chartSkillTitle">Comprehensive Skill Profile</h4>
-                <div style="height:300px; width:100%;">
+                <div class="chart-container-flex" style="height: 350px;">
                     <canvas id="radarChart"></canvas>
                 </div>
             </div>
@@ -565,12 +590,12 @@
         <!-- History Table -->
         <div class="history-panel animate-entry" id="historyPanel">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
-                <h3 style="margin:0; display:flex; align-items:center; gap:10px;">
+                <h3 style="margin:0; display:flex; align-items:center; gap:10px; font-size: 1.1rem;">
                     <i class="fas fa-history"></i> <span data-i18n="historyTitle">Recent Predictions</span>
                     <button onclick="clearLocalHistory()" class="clear-btn" title="Clear Local History"><i class="fas fa-trash-alt"></i></button>
                 </h3>
                 <button onclick="downloadHistorySheet()" class="secondary-btn" style="width:auto; padding:0.5rem 1rem; margin:0;">
-                    <i class="fas fa-file-csv"></i> Download Sheet
+                    <i class="fas fa-file-csv"></i> Download CSV
                 </button>
             </div>
             
@@ -834,6 +859,7 @@
             gap: 10px;
             animation: slideIn 0.3s ease-out;
             font-weight: 600;
+            z-index: 10000;
         `;
         
         toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
@@ -848,7 +874,30 @@
     }
     
     function downloadHistorySheet() {
-        window.location.href = 'http://127.0.0.1:5000/download_history';
+        const history = JSON.parse(localStorage.getItem('predHistory') || '[]');
+        if (history.length === 0) {
+            showToast("No history to download", "error");
+            return;
+        }
+
+        // Create CSV Content
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Name,Result,Confidence,Time\n";
+        
+        history.forEach(function(row) {
+            csvContent += `${row.name},${row.pred},${row.conf},${row.time}\n`;
+        });
+
+        // Create Download Link
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "student_predictions.csv");
+        document.body.appendChild(link);
+        
+        link.click();
+        document.body.removeChild(link); // Clean up
+        showToast("History downloaded as CSV", "success");
     }
 
     // Updated Sync Inputs function with Auto-Save
@@ -920,7 +969,7 @@
     }
 
     function clearLocalHistory() {
-        if(confirm("Clear local history table? This does not affect the server sheet.")) {
+        if(confirm("Clear local history table?")) {
             localStorage.removeItem('predHistory');
             loadHistory();
             showToast("Local history cleared", "success");
@@ -934,9 +983,10 @@
         // Enter Key Support
         document.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
-                // Prevent firing if user is typing in an input field that isn't the submit button
-                // But generally good to trigger Analysis
-                predictPerformance();
+                // Only trigger if focused on an input
+                if (e.target.tagName === 'INPUT') {
+                    predictPerformance();
+                }
             }
         });
         
@@ -1018,7 +1068,40 @@
         document.body.setAttribute('data-theme', 'dark');
     }
 
-    // --- 4. Main Prediction Logic ---
+    // --- 4. MOCK BACKEND LOGIC (Replaces Python/Flask) ---
+    function mockBackendPredict(data) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                // 1. Normalize inputs to a 0-1 scale
+                const normAttendance = data.attendance / 100;
+                const normStudy = Math.min(data.study_hours / 15, 1); // Cap at 15 hours for max points
+                const normMarks = data.internal_marks / 100;
+                const normAssign = data.assignments / 10;
+                const normActivity = data.activities === 1 ? 0.05 : 0; // 5% bonus
+
+                // 2. Weighted Sum (Heuristic Model)
+                // Weights: Attendance (30%), Marks (30%), Assignments (20%), Study (20%)
+                let score = (normAttendance * 0.30) + 
+                            (normMarks * 0.30) + 
+                            (normAssign * 0.20) + 
+                            (normStudy * 0.20) + 
+                            normActivity;
+
+                // 3. Determine Result
+                const raw_probability = Math.min(Math.max(score, 0), 0.99); // Clamp 0-0.99
+                const prediction = raw_probability >= 0.55 ? "Pass" : "Fail";
+
+                resolve({
+                    name: data.name,
+                    prediction: prediction,
+                    raw_probability: raw_probability,
+                    confidence: (raw_probability * 100).toFixed(1) + '%' // Add string confidence for history
+                });
+            }, 800); // Fake network delay for realism
+        });
+    }
+
+    // --- 5. Main Prediction Logic ---
     async function predictPerformance() {
         const btn = document.getElementById('predictBtn');
         const t = translations[currentLang];
@@ -1042,16 +1125,9 @@
         btn.innerHTML = t.btnProcessing;
 
         try {
-            // USE LOCAL ABSOLUTE PATH
-            const response = await fetch('http://127.0.0.1:5000/predict', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-
-            if (!response.ok) throw new Error("Backend error");
-
-            const result = await response.json();
+            // Use Mock Backend
+            const result = await mockBackendPredict(data);
+            
             lastData = data;
             lastResult = result;
 
@@ -1071,7 +1147,7 @@
             }
 
         } catch (error) {
-            showToast("Could not connect to server.", "error");
+            showToast("Error during prediction.", "error");
             console.error(error);
         } finally {
             btn.disabled = false;
@@ -1113,7 +1189,7 @@
         renderCharts(data, result);
     }
 
-    // --- 5. Chart Logic ---
+    // --- 6. Chart Logic ---
     function renderCharts(data, result) {
         const isDark = document.body.getAttribute('data-theme') === 'dark';
         const textColor = isDark ? '#f1f5f9' : '#1e293b';
@@ -1143,7 +1219,12 @@
                     borderWidth: 0
                 }]
             },
-            options: { cutout: '75%', plugins: { legend: { display: false } } }
+            options: { 
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%', 
+                plugins: { legend: { display: false } } 
+            }
         });
 
         // 2. Bar Chart
@@ -1170,7 +1251,12 @@
                 ]
             },
             options: {
-                scales: { y: { beginAtZero: true, max: 100 } },
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { 
+                    y: { beginAtZero: true, max: 100 },
+                    x: { grid: { display: false } }
+                },
                 plugins: { legend: { position: 'bottom' } }
             }
         });
@@ -1198,13 +1284,22 @@
                 }]
             },
             options: {
-                scales: { r: { min: 0, max: 100, ticks: { display: false } } },
-                maintainAspectRatio: false
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { 
+                    r: { 
+                        min: 0, 
+                        max: 100, 
+                        ticks: { display: false },
+                        grid: { color: gridColor },
+                        angleLines: { color: gridColor }
+                    } 
+                }
             }
         });
     }
 
-    // --- 6. Optimization Logic ---
+    // --- 7. Optimization Logic ---
     async function optimizePath() {
         const btn = document.getElementById('optimizeBtn');
         const adviceBox = document.getElementById('adviceBox');
@@ -1220,20 +1315,13 @@
         showToast("Calculating pass strategy...", "success");
 
         for (let i = 1; i <= 10; i++) {
-            // Show Progress
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Checking +${i} hours...`;
-            
+            // Update data for simulation
             currentData.study_hours = originalHours + i;
             if (currentData.study_hours > 20) break;
 
             try {
-                // USE LOCAL ABSOLUTE PATH
-                const response = await fetch('http://127.0.0.1:5000/predict', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(currentData)
-                });
-                const result = await response.json();
+                // Use Mock Backend
+                const result = await mockBackendPredict(currentData);
 
                 if (result.prediction === "Pass") {
                     foundPath = true;
@@ -1259,7 +1347,7 @@
         btn.innerHTML = t.btnRecalculate;
     }
 
-    // --- 7. History Logic ---
+    // --- 8. History Logic ---
     function addToHistory(result) {
         let history = JSON.parse(localStorage.getItem('predHistory') || '[]');
         history.unshift({
