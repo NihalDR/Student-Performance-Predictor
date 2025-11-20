@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Success AI Platform</title>
     
-    <!-- Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -221,6 +220,15 @@
             transition: border-color 0.2s;
         }
         input:focus, textarea:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+        
+        /* File Input Styling */
+        input[type="file"] {
+            border: 1px dashed var(--border);
+            padding: 1rem;
+            display: block;
+            cursor: pointer;
+            background: var(--bg);
+        }
 
         /* Buttons */
         button {
@@ -270,6 +278,11 @@
         .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary); margin: 0.5rem 0; }
         .stat-label { color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
         .keyword-tag { background: var(--bg); border: 1px solid var(--border); padding: 5px 10px; border-radius: 15px; font-size: 0.9rem; color: var(--secondary); }
+        
+        /* Profile Styles */
+        .profile-stat-group { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+        .profile-stat-group div { padding: 1rem; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); }
+        .profile-stat-group span { display: block; font-weight: bold; font-size: 1.2rem; color: var(--primary); }
 
         /* CGPA Styles */
         .subject-row { display: grid; grid-template-columns: 3fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px; align-items: center; }
@@ -289,10 +302,8 @@
 </head>
 <body>
 
-<!-- TOAST CONTAINER -->
 <div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px;"></div>
 
-<!-- LOGIN OVERLAY -->
 <div id="login-overlay">
     <div class="login-card">
         <div class="login-logo"><i class="fas fa-graduation-cap"></i></div>
@@ -310,10 +321,8 @@
     </div>
 </div>
 
-<!-- MAIN APP CONTAINER -->
 <div class="app-container" id="app-container">
     
-    <!-- SIDEBAR -->
     <nav class="sidebar">
         <div class="brand">
             <i class="fas fa-graduation-cap fa-lg"></i>
@@ -324,6 +333,11 @@
             <li class="nav-item">
                 <a class="nav-link active" onclick="switchTab('dashboard', this)">
                     <i class="fas fa-chart-line"></i> <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="switchTab('profile', this)">
+                    <i class="fas fa-user-circle"></i> <span>Student Profile</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -350,7 +364,6 @@
         </div>
     </nav>
 
-    <!-- MAIN CONTENT -->
     <main class="main-content">
         
         <div class="top-header">
@@ -370,11 +383,9 @@
             </div>
         </div>
 
-        <!-- ================= TAB 1: DASHBOARD ================= -->
         <div id="tab-dashboard" class="tab-section active">
             <div class="dashboard-grid">
                 
-                <!-- Inputs (Left) -->
                 <div class="card">
                     <div style="border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem;">
                         <h3 style="margin: 0; font-size: 1rem; color: var(--text-muted); text-transform: uppercase;" data-i18n="metrics">Performance Metrics</h3>
@@ -437,7 +448,6 @@
                         <i class="fas fa-magic"></i> <span data-i18n="btnPath">Calculate Path to Pass</span>
                     </button>
 
-                    <!-- Extra Tools: Demo & Reset -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 0.5rem;">
                         <button onclick="fillDemoData()" class="btn-secondary" style="font-size: 0.9rem;">
                             <i class="fas fa-bolt"></i> Demo Fill
@@ -452,17 +462,14 @@
                     </button>
                 </div>
 
-                <!-- Dashboard Content (Right) -->
                 <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                     
-                    <!-- Empty State -->
                     <div id="emptyState" style="text-align: center; padding: 4rem; opacity: 0.5;">
                         <i class="fas fa-robot" style="font-size: 4rem; margin-bottom: 1rem; color: var(--primary);"></i>
                         <h3 data-i18n="readyTitle">Ready to Analyze</h3>
                         <p data-i18n="readyDesc">Enter details to see analysis</p>
                     </div>
 
-                    <!-- Analysis Results -->
                     <div id="dashboard-content" style="display: none; animation: fadeIn 0.5s;">
                         <div class="card" style="text-align: center; padding: 2rem; position: relative;">
                             <h2 style="color: var(--text-muted); font-size: 1.2rem;"><span data-i18n="analysisFor">Analysis for</span> <span id="resName" style="color: var(--primary)">--</span></h2>
@@ -486,7 +493,6 @@
                             </div>
                         </div>
                         
-                        <!-- History Table -->
                         <div class="card" id="historyPanel" style="display: none;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <h3 style="font-size: 1.1rem; margin:0;" data-i18n="historyTitle">Recent Predictions</h3>
@@ -510,22 +516,81 @@
                 </div>
             </div>
         </div>
+        
+        <div id="tab-profile" class="tab-section">
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+                <div class="card" style="text-align: center;">
+                    <div class="avatar" style="width: 80px; height: 80px; font-size: 2.5rem; margin: 0 auto 1rem;">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <h3 id="profile-name-display">Alex Smith</h3>
+                    <p style="color: var(--text-muted); margin-top: -10px;" id="profile-id-display">STU-999</p>
+                    
+                    <div class="profile-stat-group">
+                        <div>Avg Attendance <span>85%</span></div>
+                        <div>Current SGPA <span>8.2</span></div>
+                    </div>
 
-        <!-- ================= TAB 2: ANALYZER ================= -->
+                    <div class="form-group">
+                        <label>Major</label>
+                        <input type="text" id="profile-major" value="Computer Science">
+                    </div>
+                    <div class="form-group">
+                        <label>Expected Graduation</label>
+                        <input type="text" id="profile-grad" value="May 2026">
+                    </div>
+                    
+                    <button onclick="saveProfile()" class="btn-primary">
+                        <i class="fas fa-save"></i> Save Profile
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <h3><i class="fas fa-bullseye"></i> Goals & Milestones</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Set your academic targets for the semester.</p>
+                    
+                    <div class="form-group">
+                        <label>Target SGPA</label>
+                        <input type="number" id="goal-sgpa" min="6.0" max="10.0" step="0.1" value="9.0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Next Assignment Deadline</label>
+                        <input type="date" id="goal-deadline" value="2025-12-15">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Notes/Motivation</label>
+                        <textarea id="goal-notes" rows="4">Stay disciplined and review lecture notes daily to achieve the target SGPA.</textarea>
+                    </div>
+
+                    <button onclick="showToast('Goals updated successfully!', 'success')" class="btn-secondary">
+                        <i class="fas fa-check"></i> Update Goals
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div id="tab-analyzer" class="tab-section">
             <div class="card">
                 <h3><i class="fas fa-microscope"></i> Study Material Analyzer</h3>
-                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Paste your study notes, assignment draft, or syllabus text below to get insights.</p>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Paste text or upload a document to get insights.</p>
                 
                 <div class="form-group">
+                    <label>Paste Text</label>
                     <textarea id="doc-text" rows="10" placeholder="Paste text here..." style="resize: vertical;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Upload PDF Document (Simulated)</label>
+                    <input type="file" id="pdf-file" accept=".pdf" onchange="document.getElementById('doc-text').value = ''">
                 </div>
                 
                 <div style="display: flex; gap: 10px;">
                     <button onclick="analyzeDocument()" class="btn-primary" style="width: auto; padding: 0.8rem 2rem;">
-                        <i class="fas fa-bolt"></i> Analyze Text
+                        <i class="fas fa-bolt"></i> Analyze Content
                     </button>
-                    <button onclick="document.getElementById('doc-text').value=''" class="btn-secondary" style="width: auto;">
+                    <button onclick="document.getElementById('doc-text').value=''; document.getElementById('pdf-file').value=''" class="btn-secondary" style="width: auto;">
                         Clear
                     </button>
                 </div>
@@ -554,10 +619,8 @@
             </div>
         </div>
 
-        <!-- ================= TAB 3: CGPA ================= -->
         <div id="tab-cgpa" class="tab-section">
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
-                <!-- Calculator Form -->
                 <div class="card">
                     <h3><i class="fas fa-calculator"></i> Semester GPA Calculator</h3>
                     <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Add your subjects, credits, and expected grades.</p>
@@ -570,8 +633,7 @@
                     </div>
 
                     <div id="subjects-container">
-                        <!-- Rows added by JS -->
-                    </div>
+                        </div>
 
                     <button onclick="addSubjectRow()" class="btn-secondary" style="margin-top: 1rem; border-style: dashed;">
                         <i class="fas fa-plus"></i> Add Subject
@@ -582,7 +644,6 @@
                     </button>
                 </div>
 
-                <!-- CGPA Results -->
                 <div>
                     <div class="cgpa-result-box" id="cgpa-display-box" style="display: none;">
                         <div style="font-size: 1rem; opacity: 0.9;">Your SGPA</div>
@@ -667,6 +728,7 @@
         document.getElementById('user-display').innerText = user;
         
         loadFormState();
+        loadProfile(); // Load profile data on login
         addSubjectRow(); // Add default CGPA row
     }
 
@@ -681,7 +743,12 @@
         document.querySelectorAll('.tab-section').forEach(el => el.classList.remove('active'));
         document.getElementById('tab-' + tabId).classList.add('active');
 
-        const titles = { 'dashboard': 'Dashboard', 'analyzer': 'Document Analyzer', 'cgpa': 'CGPA Calculator' };
+        const titles = { 
+            'dashboard': 'Dashboard', 
+            'profile': 'Student Profile',
+            'analyzer': 'Document Analyzer', 
+            'cgpa': 'CGPA Calculator' 
+        };
         document.getElementById('page-title').innerText = titles[tabId];
     }
 
@@ -721,6 +788,7 @@
     function getFormData() {
         return {
             name: document.getElementById('student_name').value,
+            id: document.getElementById('student_id').value,
             attendance: parseFloat(document.getElementById('attendance').value),
             study_hours: parseFloat(document.getElementById('study_hours').value),
             internal_marks: parseFloat(document.getElementById('internal_marks').value),
@@ -738,6 +806,7 @@
         document.getElementById('assignments').value = 9;
         document.getElementById('activities').value = "1";
         ['attendance', 'study_hours', 'internal_marks', 'assignments'].forEach(id => syncInputs(id));
+        saveFormState(); // Save demo data to form state
         showToast("Demo data filled!", "success");
     }
 
@@ -752,6 +821,7 @@
         
         document.getElementById('dashboard-content').style.display = 'none';
         document.getElementById('emptyState').style.display = 'block';
+        localStorage.removeItem('formState');
         showToast("Dashboard reset", "success");
     }
 
@@ -929,10 +999,27 @@
 
     // --- DOC ANALYZER ---
     function analyzeDocument() {
-        const text = document.getElementById('doc-text').value;
-        if(!text.trim()) { showToast("Please enter text", "error"); return; }
+        const text = document.getElementById('doc-text').value.trim();
+        const pdfFile = document.getElementById('pdf-file').files[0];
+        
+        let contentToAnalyze = '';
+        let fileType = '';
 
-        const words = text.trim().split(/\s+/).length;
+        if (text) {
+            contentToAnalyze = text;
+            fileType = 'text';
+        } else if (pdfFile) {
+            // Simulated PDF analysis. Cannot actually read PDF content client-side in a simple way.
+            showToast(`Simulating analysis for PDF: ${pdfFile.name}`, "success");
+            // Mock content for simulation
+            contentToAnalyze = "This is a long document about study materials, exam preparation, and important concepts for the final chapter. The key is consistent notes and assignments.";
+            fileType = 'pdf';
+        } else {
+            showToast("Please enter text or upload a document", "error"); 
+            return;
+        }
+
+        const words = contentToAnalyze.split(/\s+/).length;
         const readingTime = Math.ceil(words / 200);
         
         document.getElementById('analysis-results').style.display = 'block';
@@ -940,8 +1027,9 @@
         document.getElementById('stat-time').innerText = readingTime + 'm';
         document.getElementById('stat-complex').innerText = words > 300 ? 'High' : 'Normal';
 
-        // Fake keywords
-        const keywords = ['study', 'exam', 'notes', 'important', 'chapter'];
+        // Fake keywords based on mock content
+        const mockKeywords = ['study', 'exam', 'notes', 'important', 'chapter', 'concepts', 'assignments'];
+        const keywords = Array.from(new Set(mockKeywords.filter(k => contentToAnalyze.toLowerCase().includes(k))));
         const kwHtml = keywords.map(k => `<span class="keyword-tag">#${k}</span>`).join('');
         document.getElementById('keywords-container').innerHTML = kwHtml;
     }
@@ -969,7 +1057,12 @@
             totalCrd += parseInt(credits[i].value);
         }
         
-        if(totalCrd === 0) return;
+        if(totalCrd === 0) {
+            document.getElementById('cgpa-display-box').style.display = 'block';
+            document.getElementById('final-sgpa').innerText = 'N/A';
+            document.getElementById('cgpa-feedback').innerText = 'Add subjects to calculate.';
+            return;
+        }
         
         const sgpa = (totalPts / totalCrd).toFixed(2);
         document.getElementById('cgpa-display-box').style.display = 'block';
@@ -980,7 +1073,49 @@
         else if(sgpa >= 8) msg = "Excellent! 🔥";
         document.getElementById('cgpa-feedback').innerText = msg;
         
+        // Update profile SGPA display
+        document.querySelector('.profile-stat-group div:nth-child(2) span').innerText = sgpa;
+        
         confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+    }
+    
+    // --- PROFILE LOGIC ---
+    function saveProfile() {
+        const profileData = {
+            name: document.getElementById('profile-name-display').innerText, // Use current display name
+            id: document.getElementById('profile-id-display').innerText, // Use current display ID
+            major: document.getElementById('profile-major').value,
+            grad: document.getElementById('profile-grad').value,
+            sgpa: document.querySelector('.profile-stat-group div:nth-child(2) span').innerText
+        };
+        localStorage.setItem('studentProfile', JSON.stringify(profileData));
+        showToast("Profile saved successfully!", "success");
+    }
+
+    function loadProfile() {
+        const dashData = getFormData();
+        
+        // Use data from Dashboard inputs as primary profile source
+        document.getElementById('profile-name-display').innerText = dashData.name || 'Student Name';
+        document.getElementById('profile-id-display').innerText = dashData.id || 'STU-000';
+        document.querySelector('.profile-stat-group div:nth-child(1) span').innerText = dashData.attendance + '%';
+        
+        const storedProfile = JSON.parse(localStorage.getItem('studentProfile') || '{}');
+        
+        if (storedProfile.major) {
+            document.getElementById('profile-major').value = storedProfile.major;
+            document.getElementById('profile-grad').value = storedProfile.grad;
+            document.querySelector('.profile-stat-group div:nth-child(2) span').innerText = storedProfile.sgpa;
+        } else {
+            // Default or placeholder data for first run
+            document.getElementById('profile-major').value = 'Undeclared';
+            document.getElementById('profile-grad').value = '20XX';
+            document.querySelector('.profile-stat-group div:nth-child(2) span').innerText = 'N/A';
+        }
+        
+        // Ensure dashboard name/ID matches profile name/ID if they were set
+        document.getElementById('student_name').value = document.getElementById('profile-name-display').innerText;
+        document.getElementById('student_id').value = document.getElementById('profile-id-display').innerText;
     }
 
     // --- UTILS ---
@@ -997,8 +1132,28 @@
         setTimeout(() => t.remove(), 3000);
     }
 
-    function saveFormState() { /* Optional persistence */ }
-    function loadFormState() { /* Optional load */ }
+    function saveFormState() { 
+        // Save dashboard form state to local storage
+        const state = getFormData();
+        localStorage.setItem('formState', JSON.stringify(state));
+    }
+    
+    function loadFormState() {
+        // Load dashboard form state from local storage
+        const state = JSON.parse(localStorage.getItem('formState') || '{}');
+        if (state.name) {
+            document.getElementById('student_name').value = state.name;
+            document.getElementById('student_id').value = state.id;
+            document.getElementById('attendance').value = state.attendance;
+            document.getElementById('study_hours').value = state.study_hours;
+            document.getElementById('internal_marks').value = state.internal_marks;
+            document.getElementById('assignments').value = state.assignments;
+            document.getElementById('activities').value = state.activities;
+            
+            // Sync number inputs
+            ['attendance', 'study_hours', 'internal_marks', 'assignments'].forEach(id => syncInputs(id));
+        }
+    }
 
     // Init
     loadHistory();
