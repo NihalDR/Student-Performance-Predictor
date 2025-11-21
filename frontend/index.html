@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Success AI Platform</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- CSS Variables --- */
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4338ca;
+            --secondary: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --sidebar-bg: #ffffff;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --input-bg: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --primary: #818cf8;
+            --primary-dark: #6366f1;
+            --secondary: #6366f1;
+            --bg: #0f172a;
+            --sidebar-bg: #1e293b;
+            --card-bg: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --input-bg: #0f172a;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --- Global Reset --- */
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden; /* Prevent horizontal scroll from animations */
+        }
+
+        /* --- LOGIN OVERLAY --- */
+        #login-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .login-logo { font-size: 3rem; color: var(--primary); margin-bottom: 1rem; }
+        .login-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 2rem; color: var(--text); }
+
+        /* --- APP LAYOUT (Sidebar + Main) --- */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            opacity: 0; /* Hidden until login */
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        .app-container.active { opacity: 1; pointer-events: all; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: width 0.3s;
+        }
+
+        .brand {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2.5rem;
+        }
+
+        .nav-menu { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+        .nav-item { margin-bottom: 0.5rem; }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.8rem 1rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.2s;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .nav-link:hover { background: var(--bg); color: var(--primary); }
+        .nav-link.active { background: var(--primary); color: white; box-shadow: 0 4px 6px rgba(99, 102, 241, 0.3); }
+
+        .user-profile {
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .avatar { width: 40px; height: 40px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary); }
+
+        /* Main Content Area */
+        .main-content {
+            margin-left: 260px; /* Match sidebar width */
+            flex-grow: 1;
+            padding: 2rem;
+            max-width: 1600px;
+            width: 100%;
+        }
+
+        /* Top Header in Main Content */
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .control-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .control-btn:hover { border-color: var(--primary); }
+
+        /* Tab Switching Logic */
+        .tab-section { display: none; animation: fadeIn 0.4s ease-out; }
+        .tab-section.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- DASHBOARD LAYOUT --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 2rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+        }
+
+        h1, h2, h3 { color: var(--text); margin-top: 0; }
+
+        /* Form Elements */
+        .form-group { margin-bottom: 1.2rem; }
+        label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem; color: var(--text); }
+        
+        input[type="text"], input[type="password"], input[type="number"], textarea, select {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--input-bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input:focus, textarea:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+        
+        /* File Input Styling */
+        input[type="file"] {
+            border: 1px dashed var(--border);
+            padding: 1rem;
+            display: block;
+            cursor: pointer;
+            background: var(--bg);
+        }
+
+        /* Buttons */
+        button {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 10px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); margin-top: 0.5rem; }
+        .btn-secondary:hover { background: var(--bg); border-color: var(--primary); }
+
+        /* Sliders */
+        .slider-container { display: flex; align-items: center; gap: 12px; }
+        .number-input { width: 75px; padding: 0.4rem; text-align: center; border-radius: 6px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); font-weight: bold; }
+        input[type="range"] { flex-grow: 1; height: 6px; background: var(--border); border-radius: 5px; -webkit-appearance: none; cursor: pointer; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: var(--primary); border-radius: 50%; transition: transform 0.1s; box-shadow: 0 0 0 2px var(--card-bg); }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        /* Dashboard Charts & Results */
+        .status-badge { display: inline-block; padding: 0.5rem 2rem; border-radius: 50px; font-size: 2rem; font-weight: 800; margin: 1rem 0; }
+        .advice-box { background: var(--bg); padding: 1rem; border-radius: 8px; text-align: left; border-left: 4px solid var(--primary); line-height: 1.6; }
+        
+        .charts-wrapper { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+        .chart-card { background: var(--card-bg); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; }
+
+        /* History Table */
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .history-table th { text-align: left; padding: 0.8rem; border-bottom: 2px solid var(--border); color: var(--primary); font-size: 0.9rem; }
+        .history-table td { padding: 0.8rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+
+        /* Analyzer Styles */
+        .analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+        .stat-card { background: var(--bg); padding: 1.5rem; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
+        .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary); margin: 0.5rem 0; }
+        .stat-label { color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+        .keyword-tag { background: var(--bg); border: 1px solid var(--border); padding: 5px 10px; border-radius: 15px; font-size: 0.9rem; color: var(--secondary); }
+        
+        /* Profile Styles */
+        .profile-stat-group { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+        .profile-stat-group div { padding: 1rem; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); }
+        .profile-stat-group span { display: block; font-weight: bold; font-size: 1.2rem; color: var(--primary); }
+
+        /* CGPA Styles */
+        .subject-row { display: grid; grid-template-columns: 3fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .cgpa-result-box { text-align: center; padding: 2rem; background: var(--primary); color: white; border-radius: 16px; margin-bottom: 1.5rem; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .sidebar { width: 70px; padding: 1rem 0.5rem; }
+            .brand span, .nav-link span, .user-profile span { display: none; }
+            .nav-link { justify-content: center; padding: 1rem 0; }
+            .main-content { margin-left: 70px; padding: 1rem; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .brand { justify-content: center; }
+            .top-header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 10000; display: flex; flex-direction: column; gap: 10px;"></div>
+
+<div id="login-overlay">
+    <div class="login-card">
+        <div class="login-logo"><i class="fas fa-graduation-cap"></i></div>
+        <div class="login-title">Student Portal</div>
+        <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <input type="text" id="login-user" placeholder="Username" required value="student">
+            </div>
+            <div class="form-group">
+                <input type="password" id="login-pass" placeholder="Password" required value="password">
+            </div>
+            <button type="submit" class="btn-primary">Login</button>
+            <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-muted);">Demo: Any credentials work</p>
+        </form>
+    </div>
+</div>
+
+<div class="app-container" id="app-container">
+    
+    <nav class="sidebar">
+        <div class="brand">
+            <i class="fas fa-graduation-cap fa-lg"></i>
+            <span>Student AI</span>
+        </div>
+        
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a class="nav-link active" onclick="switchTab('dashboard', this)">
+                    <i class="fas fa-chart-line"></i> <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="switchTab('profile', this)">
+                    <i class="fas fa-user-circle"></i> <span>Student Profile</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="switchTab('analyzer', this)">
+                    <i class="fas fa-file-alt"></i> <span>Doc Analyzer</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" onclick="switchTab('cgpa', this)">
+                    <i class="fas fa-calculator"></i> <span>CGPA Calc</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="user-profile">
+            <div class="avatar"><i class="fas fa-user"></i></div>
+            <div style="overflow: hidden;">
+                <div style="font-weight: bold; white-space: nowrap;">Welcome</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);" id="user-display">Student</div>
+            </div>
+            <button onclick="logout()" style="margin-left: auto; width: auto; padding: 5px; background: none; color: var(--danger);" title="Logout">
+                <i class="fas fa-sign-out-alt"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        
+        <div class="top-header">
+            <h2 id="page-title" style="margin: 0;">Dashboard</h2>
+            
+            <div class="header-controls">
+                <select id="langSelect" class="control-btn" onchange="changeLanguage(this.value)">
+                    <option value="en">🇺🇸 English</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="hi">🇮🇳 हिन्दी</option>
+                </select>
+
+                <button class="control-btn" onclick="toggleTheme()">
+                    <i class="fas fa-adjust"></i> <span data-i18n="theme">Theme</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="tab-dashboard" class="tab-section active">
+            <div class="dashboard-grid">
+                
+                <div class="card">
+                    <div style="border-bottom: 1px solid var(--border); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin: 0; font-size: 1rem; color: var(--text-muted); text-transform: uppercase;" data-i18n="metrics">Performance Metrics</h3>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><span data-i18n="labelName">Name</span></label>
+                        <input type="text" id="student_name" placeholder="e.g. John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label><span data-i18n="labelID">Student ID</span></label>
+                        <input type="text" id="student_id" placeholder="e.g. STU-2025">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><span data-i18n="labelAttendance">Attendance</span></label>
+                        <div class="slider-container">
+                            <input type="range" id="attendance" min="0" max="100" value="75" oninput="syncInputs('attendance')">
+                            <input type="number" id="attendance_num" class="number-input" min="0" max="100" value="75" oninput="syncInputs('attendance', true)">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span data-i18n="labelStudy">Study Hours</span></label>
+                        <div class="slider-container">
+                            <input type="range" id="study_hours" min="0" max="20" value="5" oninput="syncInputs('study_hours')">
+                            <input type="number" id="study_hours_num" class="number-input" min="0" max="20" value="5" oninput="syncInputs('study_hours', true)">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span data-i18n="labelMarks">Internal Marks</span></label>
+                        <div class="slider-container">
+                            <input type="range" id="internal_marks" min="0" max="100" value="60" oninput="syncInputs('internal_marks')">
+                            <input type="number" id="internal_marks_num" class="number-input" min="0" max="100" value="60" oninput="syncInputs('internal_marks', true)">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><span data-i18n="labelAssignments">Assignments</span></label>
+                        <div class="slider-container">
+                            <input type="range" id="assignments" min="0" max="10" value="8" oninput="syncInputs('assignments')">
+                            <input type="number" id="assignments_num" class="number-input" min="0" max="10" value="8" oninput="syncInputs('assignments', true)">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label data-i18n="labelActivities">Extra Activities</label>
+                        <select id="activities">
+                            <option value="0" data-i18n="optNo">No Participation</option>
+                            <option value="1" data-i18n="optYes">Active Participation</option>
+                        </select>
+                    </div>
+
+                    <button onclick="predictPerformance()" id="predictBtn" class="btn-primary">
+                        <i class="fas fa-search"></i> <span data-i18n="btnAnalyze">Analyze Performance</span>
+                    </button>
+                    
+                    <button onclick="optimizePath()" id="optimizeBtn" style="background: var(--success); color: white; display: none; margin-top: 10px;">
+                        <i class="fas fa-magic"></i> <span data-i18n="btnPath">Calculate Path to Pass</span>
+                    </button>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 0.5rem;">
+                        <button onclick="fillDemoData()" class="btn-secondary" style="font-size: 0.9rem;">
+                            <i class="fas fa-bolt"></i> Demo Fill
+                        </button>
+                        <button onclick="resetForm()" class="btn-secondary" style="font-size: 0.9rem;">
+                            <i class="fas fa-undo"></i> <span data-i18n="btnReset">Reset</span>
+                        </button>
+                    </div>
+                    
+                    <button onclick="window.print()" class="btn-secondary" id="printBtn" style="display:none; margin-top: 0.5rem;">
+                        <i class="fas fa-file-pdf"></i> <span data-i18n="btnPrint">Download Report</span>
+                    </button>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    
+                    <div id="emptyState" style="text-align: center; padding: 4rem; opacity: 0.5;">
+                        <i class="fas fa-robot" style="font-size: 4rem; margin-bottom: 1rem; color: var(--primary);"></i>
+                        <h3 data-i18n="readyTitle">Ready to Analyze</h3>
+                        <p data-i18n="readyDesc">Enter details to see analysis</p>
+                    </div>
+
+                    <div id="dashboard-content" style="display: none; animation: fadeIn 0.5s;">
+                        <div class="card" style="text-align: center; padding: 2rem; position: relative;">
+                            <h2 style="color: var(--text-muted); font-size: 1.2rem;"><span data-i18n="analysisFor">Analysis for</span> <span id="resName" style="color: var(--primary)">--</span></h2>
+                            <div id="statusBadge" class="status-badge">--</div>
+                            <div id="adviceBox" class="advice-box"></div>
+                        </div>
+
+                        <div class="charts-wrapper">
+                            <div class="chart-card">
+                                <h4 data-i18n="chartConfTitle">Pass Probability</h4>
+                                <div style="height: 180px; width: 180px; margin: auto; position: relative;">
+                                    <canvas id="probChart"></canvas>
+                                </div>
+                                <div id="confText" style="font-size: 1.5rem; font-weight: bold; margin-top: 15px;">--</div>
+                            </div>
+                            <div class="chart-card">
+                                <h4 data-i18n="chartSkillTitle">Skill Profile</h4>
+                                <div style="height: 250px; width: 100%;">
+                                    <canvas id="radarChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card" id="historyPanel" style="display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h3 style="font-size: 1.1rem; margin:0;" data-i18n="historyTitle">Recent Predictions</h3>
+                                <button onclick="downloadHistorySheet()" style="width: auto; padding: 5px 10px; font-size: 0.8rem;" class="btn-secondary">
+                                    <i class="fas fa-download"></i> CSV
+                                </button>
+                            </div>
+                            <table class="history-table" id="historyTable">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="thName">Name</th>
+                                        <th data-i18n="thResult">Result</th>
+                                        <th data-i18n="thConf">Confidence</th>
+                                        <th data-i18n="thTime">Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="tab-profile" class="tab-section">
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+                <div class="card" style="text-align: center;">
+                    <div class="avatar" style="width: 80px; height: 80px; font-size: 2.5rem; margin: 0 auto 1rem;">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <h3 id="profile-name-display">Alex Smith</h3>
+                    <p style="color: var(--text-muted); margin-top: -10px;" id="profile-id-display">STU-999</p>
+                    
+                    <div class="profile-stat-group">
+                        <div>Avg Attendance <span>85%</span></div>
+                        <div>Current SGPA <span>8.2</span></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Major</label>
+                        <input type="text" id="profile-major" value="Computer Science">
+                    </div>
+                    <div class="form-group">
+                        <label>Expected Graduation</label>
+                        <input type="text" id="profile-grad" value="May 2026">
+                    </div>
+                    
+                    <button onclick="saveProfile()" class="btn-primary">
+                        <i class="fas fa-save"></i> Save Profile
+                    </button>
+                </div>
+                
+                <div class="card">
+                    <h3><i class="fas fa-bullseye"></i> Goals & Milestones</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Set your academic targets for the semester.</p>
+                    
+                    <div class="form-group">
+                        <label>Target SGPA</label>
+                        <input type="number" id="goal-sgpa" min="6.0" max="10.0" step="0.1" value="9.0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Next Assignment Deadline</label>
+                        <input type="date" id="goal-deadline" value="2025-12-15">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Notes/Motivation</label>
+                        <textarea id="goal-notes" rows="4">Stay disciplined and review lecture notes daily to achieve the target SGPA.</textarea>
+                    </div>
+
+                    <button onclick="showToast('Goals updated successfully!', 'success')" class="btn-secondary">
+                        <i class="fas fa-check"></i> Update Goals
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-analyzer" class="tab-section">
+            <div class="card">
+                <h3><i class="fas fa-microscope"></i> Study Material Analyzer</h3>
+                <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Paste text or upload a document to get insights.</p>
+                
+                <div class="form-group">
+                    <label>Paste Text</label>
+                    <textarea id="doc-text" rows="10" placeholder="Paste text here..." style="resize: vertical;"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Upload PDF Document (Simulated)</label>
+                    <input type="file" id="pdf-file" accept=".pdf" onchange="document.getElementById('doc-text').value = ''">
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="analyzeDocument()" class="btn-primary" style="width: auto; padding: 0.8rem 2rem;">
+                        <i class="fas fa-bolt"></i> Analyze Content
+                    </button>
+                    <button onclick="document.getElementById('doc-text').value=''; document.getElementById('pdf-file').value=''" class="btn-secondary" style="width: auto;">
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            <div id="analysis-results" style="display: none;">
+                <div class="analysis-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Word Count</div>
+                        <div class="stat-value" id="stat-words">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Est. Reading Time</div>
+                        <div class="stat-value" id="stat-time">0m</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Complexity Score</div>
+                        <div class="stat-value" id="stat-complex">Low</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1.5rem;">
+                    <h4>Key Topics Detected</h4>
+                    <div id="keywords-container" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 1rem;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-cgpa" class="tab-section">
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                <div class="card">
+                    <h3><i class="fas fa-calculator"></i> Semester GPA Calculator</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Add your subjects, credits, and expected grades.</p>
+                    
+                    <div style="display: grid; grid-template-columns: 3fr 1fr 1fr auto; gap: 10px; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; padding: 0 10px;">
+                        <div>Subject</div>
+                        <div>Credits</div>
+                        <div>Grade</div>
+                        <div></div>
+                    </div>
+
+                    <div id="subjects-container">
+                        </div>
+
+                    <button onclick="addSubjectRow()" class="btn-secondary" style="margin-top: 1rem; border-style: dashed;">
+                        <i class="fas fa-plus"></i> Add Subject
+                    </button>
+
+                    <button onclick="calculateCGPA()" class="btn-primary" style="margin-top: 1rem;">
+                        Calculate SGPA
+                    </button>
+                </div>
+
+                <div>
+                    <div class="cgpa-result-box" id="cgpa-display-box" style="display: none;">
+                        <div style="font-size: 1rem; opacity: 0.9;">Your SGPA</div>
+                        <div style="font-size: 4rem; font-weight: 800; line-height: 1;" id="final-sgpa">0.00</div>
+                        <div style="margin-top: 1rem; font-size: 0.9rem;" id="cgpa-feedback">Keep it up!</div>
+                    </div>
+                    
+                    <div class="card" style="margin-top: 1.5rem;">
+                        <h4>Grade Reference</h4>
+                        <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.9rem; color: var(--text-muted);">
+                            <li style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border);"><span>O (Outstanding)</span> <span>10 pts</span></li>
+                            <li style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border);"><span>A+ (Excellent)</span> <span>9 pts</span></li>
+                            <li style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border);"><span>A (Very Good)</span> <span>8 pts</span></li>
+                            <li style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border);"><span>B+ (Good)</span> <span>7 pts</span></li>
+                            <li style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border);"><span>B (Above Avg)</span> <span>6 pts</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+    // --- TRANSLATIONS ---
+    const translations = {
+        en: {
+            theme: 'Theme', metrics: 'Performance Metrics', labelName: 'Name', labelID: 'Student ID',
+            labelAttendance: 'Attendance', labelStudy: 'Study Hours', labelMarks: 'Internal Marks',
+            labelAssignments: 'Assignments', labelActivities: 'Extra Activities', optNo: 'No Participation',
+            optYes: 'Active Participation', btnAnalyze: 'Analyze Performance', btnPath: 'Calculate Path to Pass',
+            btnReset: 'Reset', btnPrint: 'Download Report', readyTitle: 'Ready to Analyze', readyDesc: 'Enter details to see analysis',
+            analysisFor: 'Analysis for', chartConfTitle: 'Pass Probability', chartSkillTitle: 'Skill Profile',
+            historyTitle: 'Recent Predictions', thName: 'Name', thResult: 'Result', thConf: 'Confidence', thTime: 'Time'
+        },
+        es: {
+            theme: 'Tema', metrics: 'Métricas', labelName: 'Nombre', labelID: 'ID Estudiante',
+            labelAttendance: 'Asistencia', labelStudy: 'Horas de Estudio', labelMarks: 'Notas Internas',
+            labelAssignments: 'Tareas', labelActivities: 'Actividades Extra', optNo: 'Sin Participación',
+            optYes: 'Participación Activa', btnAnalyze: 'Analizar', btnPath: 'Calcular Ruta',
+            btnReset: 'Reiniciar', btnPrint: 'Descargar', readyTitle: 'Listo para Analizar', readyDesc: 'Ingrese detalles',
+            analysisFor: 'Análisis para', chartConfTitle: 'Probabilidad', chartSkillTitle: 'Perfil',
+            historyTitle: 'Historial', thName: 'Nombre', thResult: 'Resultado', thConf: 'Confianza', thTime: 'Hora'
+        },
+        fr: {
+            theme: 'Thème', metrics: 'Métriques', labelName: 'Nom', labelID: 'ID',
+            labelAttendance: 'Assiduité', labelStudy: 'Heures d\'Étude', labelMarks: 'Notes',
+            labelAssignments: 'Devoirs', labelActivities: 'Activités', optNo: 'Aucune',
+            optYes: 'Active', btnAnalyze: 'Analyser', btnPath: 'Calculer Chemin',
+            btnReset: 'Réinitialiser', btnPrint: 'Télécharger', readyTitle: 'Prêt', readyDesc: 'Entrez les détails',
+            analysisFor: 'Analyse pour', chartConfTitle: 'Probabilité', chartSkillTitle: 'Profil',
+            historyTitle: 'Historique', thName: 'Nom', thResult: 'Résultat', thConf: 'Confiance', thTime: 'Temps'
+        },
+        hi: {
+            theme: 'थीम', metrics: 'मेट्रिक्स', labelName: 'नाम', labelID: 'आईडी',
+            labelAttendance: 'उपस्थिति', labelStudy: 'अध्ययन घंटे', labelMarks: 'अंक',
+            labelAssignments: 'असाइनमेंट', labelActivities: 'गतिविधियां', optNo: 'नहीं',
+            optYes: 'हाँ', btnAnalyze: 'विश्लेषण करें', btnPath: 'रास्ता खोजें',
+            btnReset: 'रीसेट', btnPrint: 'डाउनलोड', readyTitle: 'तैयार', readyDesc: 'विवरण दर्ज करें',
+            analysisFor: 'के लिए विश्लेषण', chartConfTitle: 'संभावना', chartSkillTitle: 'प्रोफ़ाइल',
+            historyTitle: 'हाल का इतिहास', thName: 'नाम', thResult: 'परिणाम', thConf: 'विश्वास', thTime: 'समय'
+        }
+    };
+
+    let currentLang = 'en';
+
+    // --- CORE FUNCTIONS ---
+
+    function handleLogin(e) {
+        e.preventDefault();
+        const user = document.getElementById('login-user').value;
+        
+        // Fade out overlay
+        const overlay = document.getElementById('login-overlay');
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.style.display = 'none', 500);
+        
+        // Show app
+        const app = document.getElementById('app-container');
+        app.classList.add('active');
+        document.getElementById('user-display').innerText = user;
+        
+        loadFormState();
+        loadProfile(); // Load profile data on login
+        addSubjectRow(); // Add default CGPA row
+    }
+
+    function logout() {
+        location.reload();
+    }
+
+    function switchTab(tabId, linkElement) {
+        document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+        linkElement.classList.add('active');
+
+        document.querySelectorAll('.tab-section').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+
+        const titles = { 
+            'dashboard': 'Dashboard', 
+            'profile': 'Student Profile',
+            'analyzer': 'Document Analyzer', 
+            'cgpa': 'CGPA Calculator' 
+        };
+        document.getElementById('page-title').innerText = titles[tabId];
+    }
+
+    function changeLanguage(lang) {
+        currentLang = lang;
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (translations[lang][key]) el.innerText = translations[lang][key];
+        });
+        // Also update placeholders
+        if(translations[lang]['labelName']) document.getElementById('student_name').placeholder = translations[lang]['labelName'] + '...';
+    }
+
+    function toggleTheme() {
+        const body = document.body;
+        const cur = body.getAttribute('data-theme');
+        body.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+        // If charts exist, re-render would be ideal, but simple CSS var switch works for most parts
+        if(lastResult) renderCharts(lastData, lastResult.raw_probability, lastResult.prediction === 'Pass');
+    }
+
+    // --- DASHBOARD LOGIC ---
+    
+    let lastData = null;
+    let lastResult = null;
+    let probChartInstance = null;
+    let radarChartInstance = null;
+
+    function syncInputs(id, fromNum = false) {
+        const slider = document.getElementById(id);
+        const num = document.getElementById(id + '_num');
+        if(fromNum) slider.value = num.value;
+        else num.value = slider.value;
+        saveFormState();
+    }
+
+    function getFormData() {
+        return {
+            name: document.getElementById('student_name').value,
+            id: document.getElementById('student_id').value,
+            attendance: parseFloat(document.getElementById('attendance').value),
+            study_hours: parseFloat(document.getElementById('study_hours').value),
+            internal_marks: parseFloat(document.getElementById('internal_marks').value),
+            assignments: parseFloat(document.getElementById('assignments').value),
+            activities: parseFloat(document.getElementById('activities').value)
+        };
+    }
+
+    function fillDemoData() {
+        document.getElementById('student_name').value = "Alex Smith";
+        document.getElementById('student_id').value = "STU-999";
+        document.getElementById('attendance').value = 85;
+        document.getElementById('study_hours').value = 8;
+        document.getElementById('internal_marks').value = 72;
+        document.getElementById('assignments').value = 9;
+        document.getElementById('activities').value = "1";
+        ['attendance', 'study_hours', 'internal_marks', 'assignments'].forEach(id => syncInputs(id));
+        saveFormState(); // Save demo data to form state
+        showToast("Demo data filled!", "success");
+    }
+
+    function resetForm() {
+        document.getElementById('student_name').value = "";
+        document.getElementById('student_id').value = "";
+        document.getElementById('attendance').value = 75;
+        document.getElementById('study_hours').value = 5;
+        document.getElementById('internal_marks').value = 60;
+        document.getElementById('assignments').value = 8;
+        ['attendance', 'study_hours', 'internal_marks', 'assignments'].forEach(id => syncInputs(id));
+        
+        document.getElementById('dashboard-content').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
+        localStorage.removeItem('formState');
+        showToast("Dashboard reset", "success");
+    }
+
+    // --- MOCK PREDICTION ---
+    async function predictPerformance() {
+        const btn = document.getElementById('predictBtn');
+        btn.disabled = true; 
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+        await new Promise(r => setTimeout(r, 800)); // Simulate network
+
+        const data = getFormData();
+        lastData = data;
+
+        // Heuristic Model
+        const normAtt = data.attendance / 100;
+        const normMarks = data.internal_marks / 100;
+        const normAssign = data.assignments / 10;
+        const normStudy = Math.min(data.study_hours, 15) / 15;
+        
+        const score = (normAtt * 0.3) + (normMarks * 0.35) + (normAssign * 0.2) + (normStudy * 0.15) + (data.activities == 1 ? 0.05 : 0);
+        const prob = Math.min(Math.max(score, 0.1), 0.99).toFixed(2);
+        const isPass = prob > 0.5;
+
+        const result = { 
+            name: data.name || 'Student', 
+            prediction: isPass ? 'Pass' : 'Fail', 
+            raw_probability: prob,
+            confidence: (prob * 100).toFixed(0) + '%'
+        };
+        lastResult = result;
+
+        // UI Update
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('dashboard-content').style.display = 'block';
+        document.getElementById('printBtn').style.display = 'inline-flex';
+        
+        document.getElementById('resName').innerText = result.name;
+        const badge = document.getElementById('statusBadge');
+        badge.innerText = result.prediction;
+        badge.style.color = isPass ? '#10b981' : '#ef4444';
+        badge.style.background = isPass ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+        
+        // Advice
+        const adviceBox = document.getElementById('adviceBox');
+        const optBtn = document.getElementById('optimizeBtn');
+        if(isPass) {
+             adviceBox.innerHTML = `<strong>✅ On Track:</strong> Excellent work! Keep maintaining attendance and assignment submissions.`;
+             adviceBox.style.borderLeftColor = '#10b981';
+             optBtn.style.display = 'none';
+             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        } else {
+             adviceBox.innerHTML = `<strong>⚠️ At Risk:</strong> Current metrics suggest a high risk of failing. Click "Calculate Path to Pass" to see what improvements are needed.`;
+             adviceBox.style.borderLeftColor = '#ef4444';
+             optBtn.style.display = 'flex';
+        }
+
+        renderCharts(data, prob, isPass);
+        addToHistory(result);
+        
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-search"></i> Analyze Performance';
+    }
+
+    function renderCharts(data, prob, isPass) {
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        const txtColor = isDark ? '#f1f5f9' : '#1e293b';
+        
+        // Prob Chart
+        const ctxProb = document.getElementById('probChart').getContext('2d');
+        if(probChartInstance) probChartInstance.destroy();
+        
+        document.getElementById('confText').innerText = (prob * 100).toFixed(0) + '%';
+        document.getElementById('confText').style.color = isPass ? '#10b981' : '#ef4444';
+
+        probChartInstance = new Chart(ctxProb, {
+            type: 'doughnut',
+            data: {
+                labels: ['Success', 'Risk'],
+                datasets: [{
+                    data: [prob*100, (1-prob)*100],
+                    backgroundColor: [isPass ? '#10b981' : '#ef4444', isDark ? '#334155' : '#e2e8f0'],
+                    borderWidth: 0
+                }]
+            },
+            options: { cutout: '75%', plugins: { legend: { display: false } } }
+        });
+
+        // Radar Chart
+        const ctxRadar = document.getElementById('radarChart').getContext('2d');
+        if(radarChartInstance) radarChartInstance.destroy();
+        
+        radarChartInstance = new Chart(ctxRadar, {
+            type: 'radar',
+            data: {
+                labels: ['Attendance', 'Study', 'Marks', 'Assign.'],
+                datasets: [{
+                    label: 'Profile',
+                    data: [data.attendance, (data.study_hours/15)*100, data.internal_marks, data.assignments*10],
+                    backgroundColor: isPass ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                    borderColor: isPass ? '#10b981' : '#ef4444',
+                    borderWidth: 2,
+                    pointBackgroundColor: isPass ? '#10b981' : '#ef4444'
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        min: 0, max: 100,
+                        ticks: { display: false },
+                        grid: { color: isDark ? '#334155' : '#e2e8f0' },
+                        angleLines: { color: isDark ? '#334155' : '#e2e8f0' },
+                        pointLabels: { color: txtColor }
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    async function optimizePath() {
+        const btn = document.getElementById('optimizeBtn');
+        btn.disabled = true; btn.innerHTML = 'Calculating...';
+        await new Promise(r => setTimeout(r, 1000));
+        
+        const adviceBox = document.getElementById('adviceBox');
+        // Simple logic: suggest +3 hours or +10% attendance
+        adviceBox.innerHTML += `<br><br><strong>💡 Optimization:</strong> Increasing study time by <strong>+3 hours/week</strong> or improving attendance by <strong>10%</strong> should raise your probability to passing range.`;
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-magic"></i> Recalculate';
+    }
+
+    // --- HISTORY LOGIC ---
+    function addToHistory(res) {
+        let history = JSON.parse(localStorage.getItem('predHistory') || '[]');
+        history.unshift({
+            name: res.name,
+            pred: res.prediction,
+            conf: res.confidence,
+            time: new Date().toLocaleTimeString()
+        });
+        if(history.length > 5) history.pop();
+        localStorage.setItem('predHistory', JSON.stringify(history));
+        loadHistory();
+    }
+
+    function loadHistory() {
+        const history = JSON.parse(localStorage.getItem('predHistory') || '[]');
+        const panel = document.getElementById('historyPanel');
+        const tbody = document.querySelector('#historyTable tbody');
+        
+        if(history.length === 0) { panel.style.display = 'none'; return; }
+        
+        panel.style.display = 'block';
+        tbody.innerHTML = history.map(h => `
+            <tr>
+                <td>${h.name}</td>
+                <td><span style="color:${h.pred==='Pass'?'#10b981':'#ef4444'}; font-weight:bold;">${h.pred}</span></td>
+                <td>${h.conf}</td>
+                <td style="color:var(--text-muted); font-size:0.85rem;">${h.time}</td>
+            </tr>
+        `).join('');
+    }
+
+    function downloadHistorySheet() {
+        const history = JSON.parse(localStorage.getItem('predHistory') || '[]');
+        let csvContent = "data:text/csv;charset=utf-8,Name,Result,Confidence,Time\n";
+        history.forEach(row => { csvContent += `${row.name},${row.pred},${row.conf},${row.time}\n`; });
+        const link = document.createElement("a");
+        link.setAttribute("href", encodeURI(csvContent));
+        link.setAttribute("download", "history.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // --- DOC ANALYZER ---
+    function analyzeDocument() {
+        const text = document.getElementById('doc-text').value.trim();
+        const pdfFile = document.getElementById('pdf-file').files[0];
+        
+        let contentToAnalyze = '';
+        let fileType = '';
+
+        if (text) {
+            contentToAnalyze = text;
+            fileType = 'text';
+        } else if (pdfFile) {
+            // Simulated PDF analysis. Cannot actually read PDF content client-side in a simple way.
+            showToast(`Simulating analysis for PDF: ${pdfFile.name}`, "success");
+            // Mock content for simulation
+            contentToAnalyze = "This is a long document about study materials, exam preparation, and important concepts for the final chapter. The key is consistent notes and assignments.";
+            fileType = 'pdf';
+        } else {
+            showToast("Please enter text or upload a document", "error"); 
+            return;
+        }
+
+        const words = contentToAnalyze.split(/\s+/).length;
+        const readingTime = Math.ceil(words / 200);
+        
+        document.getElementById('analysis-results').style.display = 'block';
+        document.getElementById('stat-words').innerText = words;
+        document.getElementById('stat-time').innerText = readingTime + 'm';
+        document.getElementById('stat-complex').innerText = words > 300 ? 'High' : 'Normal';
+
+        // Fake keywords based on mock content
+        const mockKeywords = ['study', 'exam', 'notes', 'important', 'chapter', 'concepts', 'assignments'];
+        const keywords = Array.from(new Set(mockKeywords.filter(k => contentToAnalyze.toLowerCase().includes(k))));
+        const kwHtml = keywords.map(k => `<span class="keyword-tag">#${k}</span>`).join('');
+        document.getElementById('keywords-container').innerHTML = kwHtml;
+    }
+
+    // --- CGPA CALC ---
+    function addSubjectRow() {
+        const div = document.createElement('div');
+        div.className = 'subject-row';
+        div.innerHTML = `
+            <input type="text" placeholder="Subject" class="sub-name">
+            <select class="sub-credit"><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option></select>
+            <select class="sub-grade"><option value="10">O</option><option value="9">A+</option><option value="8">A</option><option value="7">B+</option><option value="6">B</option></select>
+            <button onclick="this.parentElement.remove()" style="width:auto; padding:8px; background:var(--danger); color:white;"><i class="fas fa-times"></i></button>
+        `;
+        document.getElementById('subjects-container').appendChild(div);
+    }
+
+    function calculateCGPA() {
+        const credits = document.querySelectorAll('.sub-credit');
+        const grades = document.querySelectorAll('.sub-grade');
+        let totalPts = 0, totalCrd = 0;
+        
+        for(let i=0; i<credits.length; i++) {
+            totalPts += (parseInt(credits[i].value) * parseInt(grades[i].value));
+            totalCrd += parseInt(credits[i].value);
+        }
+        
+        if(totalCrd === 0) {
+            document.getElementById('cgpa-display-box').style.display = 'block';
+            document.getElementById('final-sgpa').innerText = 'N/A';
+            document.getElementById('cgpa-feedback').innerText = 'Add subjects to calculate.';
+            return;
+        }
+        
+        const sgpa = (totalPts / totalCrd).toFixed(2);
+        document.getElementById('cgpa-display-box').style.display = 'block';
+        document.getElementById('final-sgpa').innerText = sgpa;
+        
+        let msg = "Keep working!";
+        if(sgpa >= 9) msg = "Outstanding! 🌟";
+        else if(sgpa >= 8) msg = "Excellent! 🔥";
+        document.getElementById('cgpa-feedback').innerText = msg;
+        
+        // Update profile SGPA display
+        document.querySelector('.profile-stat-group div:nth-child(2) span').innerText = sgpa;
+        
+        confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+    }
+    
+    // --- PROFILE LOGIC ---
+    function saveProfile() {
+        const profileData = {
+            name: document.getElementById('profile-name-display').innerText, // Use current display name
+            id: document.getElementById('profile-id-display').innerText, // Use current display ID
+            major: document.getElementById('profile-major').value,
+            grad: document.getElementById('profile-grad').value,
+            sgpa: document.querySelector('.profile-stat-group div:nth-child(2) span').innerText
+        };
+        localStorage.setItem('studentProfile', JSON.stringify(profileData));
+        showToast("Profile saved successfully!", "success");
+    }
+
+    function loadProfile() {
+        const dashData = getFormData();
+        
+        // Use data from Dashboard inputs as primary profile source
+        document.getElementById('profile-name-display').innerText = dashData.name || 'Student Name';
+        document.getElementById('profile-id-display').innerText = dashData.id || 'STU-000';
+        document.querySelector('.profile-stat-group div:nth-child(1) span').innerText = dashData.attendance + '%';
+        
+        const storedProfile = JSON.parse(localStorage.getItem('studentProfile') || '{}');
+        
+        if (storedProfile.major) {
+            document.getElementById('profile-major').value = storedProfile.major;
+            document.getElementById('profile-grad').value = storedProfile.grad;
+            document.querySelector('.profile-stat-group div:nth-child(2) span').innerText = storedProfile.sgpa;
+        } else {
+            // Default or placeholder data for first run
+            document.getElementById('profile-major').value = 'Undeclared';
+            document.getElementById('profile-grad').value = '20XX';
+            document.querySelector('.profile-stat-group div:nth-child(2) span').innerText = 'N/A';
+        }
+        
+        // Ensure dashboard name/ID matches profile name/ID if they were set
+        document.getElementById('student_name').value = document.getElementById('profile-name-display').innerText;
+        document.getElementById('student_id').value = document.getElementById('profile-id-display').innerText;
+    }
+
+    // --- UTILS ---
+    function showToast(msg, type) {
+        const t = document.createElement('div');
+        t.style.background = type === 'success' ? '#10b981' : '#ef4444';
+        t.style.color = 'white';
+        t.style.padding = '12px 24px';
+        t.style.borderRadius = '8px';
+        t.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+        t.style.marginBottom = '10px';
+        t.innerHTML = `<i class="fas ${type==='success'?'fa-check':'fa-exclamation-circle'}"></i> ${msg}`;
+        document.getElementById('toast-container').appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    }
+
+    function saveFormState() { 
+        // Save dashboard form state to local storage
+        const state = getFormData();
+        localStorage.setItem('formState', JSON.stringify(state));
+    }
+    
+    function loadFormState() {
+        // Load dashboard form state from local storage
+        const state = JSON.parse(localStorage.getItem('formState') || '{}');
+        if (state.name) {
+            document.getElementById('student_name').value = state.name;
+            document.getElementById('student_id').value = state.id;
+            document.getElementById('attendance').value = state.attendance;
+            document.getElementById('study_hours').value = state.study_hours;
+            document.getElementById('internal_marks').value = state.internal_marks;
+            document.getElementById('assignments').value = state.assignments;
+            document.getElementById('activities').value = state.activities;
+            
+            // Sync number inputs
+            ['attendance', 'study_hours', 'internal_marks', 'assignments'].forEach(id => syncInputs(id));
+        }
+    }
+
+    // Init
+    loadHistory();
+</script>
+
+</body>
+</html>
