@@ -1,27 +1,4 @@
 # Student Performance Predictor
-
-A simple machine learning project to predict student performance (grades / pass-fail) from student and academic features. This repository contains code, notebooks, and supporting files for experimenting with datasets, building models, evaluating results, and optionally exposing a lightweight demo.
-
----
-
-## Table of Contents
-
-- [Project Overview](#project-overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Repository Structure](#repository-structure)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Clone the repository](#clone-the-repository)
-  - [Install dependencies](#install-dependencies)
-  - [Run notebooks / scripts](#run-notebooks--scripts)
-- [Dataset](#dataset)
-- [Training & Evaluation](#training--evaluation)
-- [Contributing](#contributing)
-- [Contributors](#contributors)
-- [License](#license)
-- [Contact](#contact)
-
 ---
 
 ## Project Overview
@@ -32,7 +9,6 @@ Student Performance Predictor is intended as an educational project to demonstra
 - Feature engineering
 - Model training and hyperparameter tuning
 - Evaluation and visualization
-- (Optional) Serving a small demo
 
 Use this repository to reproduce results, extend the model, or integrate additional data and features.
 
@@ -164,31 +140,6 @@ Common evaluation metrics:
 
 ---
 
-## Contributing
-
-Contributions are welcome! Typical contribution workflow:
-
-1. Fork the repository.
-2. Create a branch: `git checkout -b feature/awesome-feature`
-3. Make changes and add tests / notebooks.
-4. Commit and push: `git push origin feature/awesome-feature`
-5. Open a Pull Request describing changes.
-
-Please add or update tests and documentation for substantial changes. Consider adding a `CONTRIBUTING.md` file to formalize the process.
-
----
-
-## Contributors
-
-- NihalDR — repository owner and primary contributor (@NihalDR)
-
-Add more contributors here as the project grows. Example format:
-
-- Jane Doe — Data preprocessing & EDA (@janedoe)
-- John Smith — Model architecture & evaluation (@johnsmith)
-
-If you'd like to be added, open a PR or create an issue with your details.
-
 ---
 
 ## License
@@ -207,3 +158,4 @@ See the LICENSE file for details.
 For questions, issues, or feature requests, please open a GitHub Issue in this repository or contact the owner: @NihalDR.
 
 Happy modeling!
+
