@@ -1,7 +1,16 @@
+<<<<<<< HEAD
 flask
 flask-cors
 pandas
 numpy
 scikit-learn
 gunicorn
+=======
+flask
+flask-cors
+pandas
+numpy
+scikit-learn
+gunicorn
+>>>>>>> 844d65485a3bbe16b72915f165562534a370f4ef
 google-generativeai
